@@ -33,7 +33,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(deployment().properties.templateLink.uri, 'HW_03_SA.json')]",
+          "uri": "[uri(variables('templateBaseUrl'), 'HW_03_SA.json')]",
           "contentVersion": "1.0.0.0"
         }
       }
