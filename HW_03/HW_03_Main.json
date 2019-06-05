@@ -11,19 +11,8 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
-      "name": "linkedTemplate",
-      "properties": {
-          "mode": "Incremental",
-          "templateLink": {
-            "uri": "[uri(deployment().properties.templateLink.uri, 'HW_03_SA.json')]",
-            "contentVersion": "1.0.0.0"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2018-05-01",
-      "name": "linkedTemplate",
+      "location" : "westeurope",
+      "name": "Vnet",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -31,8 +20,21 @@
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat('https://raw.githubusercontent.com/nikolai-bulashev-epam/EPAM_AZ_2019/master/HW_', variables('HomeWorkCode'),'/HW', variables('HomeWorkCode'), '_Params.json')]",
+            "uri":"[concat('https://raw.githubusercontent.com/nikolai-bulashev-epam/EPAM_AZ_2019/master/HW_', variables('HomeWorkCode'),'/HW_', variables('HomeWorkCode'), '_Param.json')]",
             "contentVersion":"1.0.0.0"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "location" : "westeurope",
+      "name": "SA",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[uri(deployment().properties.templateLink.uri, 'HW_03_SA.json')]",
+          "contentVersion": "1.0.0.0"
         }
       }
     }
