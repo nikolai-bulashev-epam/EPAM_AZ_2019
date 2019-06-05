@@ -30,7 +30,7 @@
   "variables": {
     "storageAccountName": "[parameters('storageAccountNameParam')]"
   },
-  "resources": [s
+  "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
