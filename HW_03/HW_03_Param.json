@@ -4,45 +4,23 @@
     "parameters":{
         "VNetSettings":{
             "value":{
-                "nets" : [
+                "vnetName": "Vnet_w_2_subnets",
+                "location": "westeurope",
+                "addressPrefixes": [
                     {
-                        "name":"FrontEnd-VMNet",
-                        "addressPrefixes": [
-                            {
-                                "name": "firstPrefix",
-                                "addressPrefix": "10.1.0.0/16"
-                            }
-                        ],
-                        "subnets":[
-                            {
-                                "name": "firstSubnet",
-                                "addressPrefix": "10.1.1.0/24"
-                            },
-                            {
-                                "name":"secondSubnet",
-                                "addressPrefix":"10.1.2.0/24"
-                            }
-                        ]
-                    },{
-                        "name":"BackEnd-VMNet",
-                        "addressPrefixes": [
-                            {
-                                "name": "firstPrefix",
-                                "addressPrefix": "10.2.0.0/16"
-                            }
-                        ],
-                        "subnets":[
-                            {
-                                "name": "firstSubnet",
-                                "addressPrefix": "10.2.1.0/24"
-                            },
-                            {
-                                "name":"secondSubnet",
-                                "addressPrefix":"10.2.2.0/24"
-                            }
-                        ]
+                        "name": "firstPrefix",
+                        "addressPrefix": "10.1.0.0/16"
                     }
-
+                ],
+                "subnets":[
+                    {
+                        "name": "FrontEnd",
+                        "addressPrefix": "10.1.1.0/24"
+                    },
+                    {
+                        "name":"Backend",
+                        "addressPrefix":"10.1.2.0/24"
+                    }
                 ]
                 
             }

@@ -2,7 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "Project_Prefix"
     "storageAccountType": {
       "type": "string",
       "defaultValue": "Standard_LRS",
@@ -22,33 +21,32 @@
       "metadata": {
         "description": "Location for all resources."
       }
+    },
+    "storageAccountNameParam": {
+      "type": "string",
+      "defaultValue": "[concat('store', uniquestring(resourceGroup().id))]"
     }
   },
   "variables": {
-    "storageAccountName": "[concat('store', uniquestring(resourceGroup().id))]",
-    "templateBaseUrl": "https://raw.githubusercontent.com/nikolai-bulashev-epam/EPAM_AZ_2019/master/"
+    "storageAccountName": "[parameters('storageAccountNameParam')]"
   },
   "resources": [
     {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2018-05-01",
-      "name": "linkedTemplate",
-      "properties": {
-          "mode": "Incremental",
-          "templateLink": {
-            "uri": "[uri(deployment().properties.templateLink.uri, 'HW_03_VM.json')]",
-            "contentVersion": "1.0.0.0"
-        }
-      }
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "apiVersion": "2018-07-01",
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      },
+      "kind": "StorageV2",
+      "properties": {}
     }
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2018-05-01",
-      "name": "linkedTemplate",
-      "properties": {
-          "mode": "Incremental",
-          "HW_03_SA"
-      }
+  ],
+  "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]"
     }
-  ]
+  }
 }
