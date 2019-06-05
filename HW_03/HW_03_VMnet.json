@@ -18,7 +18,7 @@
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('VNetSettings').addressPrefixes.addressPrefix]"
+            "[parameters('VNetSettings').addressPrefixes[0].addressPrefix]"
           ]
         }
       },
