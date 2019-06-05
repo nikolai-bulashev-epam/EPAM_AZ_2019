@@ -24,13 +24,13 @@
     },
     "storageAccountNameParam": {
       "type": "string",
-      "defaultValue": "[concat('store', uniquestring(resourceGroup().id))]"
+      "defaultValue": "[concat('store', uniquestring('asdasdasd'))]"
     }
   },
   "variables": {
     "storageAccountName": "[parameters('storageAccountNameParam')]"
   },
-  "resources": [
+  "resources": [s
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
