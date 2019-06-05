@@ -4,7 +4,7 @@
     "parameters":{
         "VNetSettings":{
             "value":{
-                "vnetName": "Vnetw2subnets",
+                "vnetName": "vnetw2subnets",
                 "location": "westeurope",
                 "addressPrefixes": [
                     {

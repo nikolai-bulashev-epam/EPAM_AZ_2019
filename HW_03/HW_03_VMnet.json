@@ -29,7 +29,7 @@
           "location": "[parameters('VNetSettings').location]",
           "name": "[parameters('VNetSettings').subnets[0].name]",
           "dependsOn": [
-            "[parameters('VNetSettings').vnetName]"
+            "[resourceId('Microsoft.Network/virtualNetworks', parameters('VNetSettings').vnetName)]"
           ],
           "properties": {
             "addressPrefix": "[parameters('VNetSettings').subnets[0].addressPrefix]"
@@ -41,7 +41,7 @@
           "location": "[parameters('VNetSettings').location]",
           "name": "[parameters('VNetSettings').subnets[1].name]",
           "dependsOn": [
-            "[parameters('VNetSettings').vnetName]"
+            "[resourceId('Microsoft.Network/virtualNetworks', parameters('VNetSettings').vnetName)]"
           ],
           "properties": {
             "addressPrefix": "[parameters('VNetSettings').subnets[1].addressPrefix]"

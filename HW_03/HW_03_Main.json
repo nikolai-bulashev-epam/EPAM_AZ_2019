@@ -12,7 +12,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
       "location" : "westeurope",
-      "name": "Vnet",
+      "name": "vnet",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -29,7 +29,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
       "location" : "westeurope",
-      "name": "SA",
+      "name": "sa",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
