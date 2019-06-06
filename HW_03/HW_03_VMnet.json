@@ -41,7 +41,7 @@
           "location": "[parameters('VNetSettings').location]",
           "name": "[parameters('VNetSettings').subnets[1].name]",
           "dependsOn": [
-            "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('VNetSettings').vnetName,'/' ,parameters('VNetSettings').subnets[0].name))]",
+            "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('VNetSettings').vnetName), '/subnets/', parameters('VNetSettings').subnets[0].name)]",
             "[resourceId('Microsoft.Network/virtualNetworks', parameters('VNetSettings').vnetName)]"
           ],
           "properties": {
