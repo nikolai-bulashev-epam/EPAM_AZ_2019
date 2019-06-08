@@ -1,0 +1,32 @@
+$RGName = 'hw03'
+$location = 'westeurope'
+$SAName = 'hw03startupfolder'
+$SAShareName = $RGName
+Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction SilentlyContinue
+
+if ($notPresent) {
+    New-AzResourceGroup -Name $RGName -Location $location
+}
+
+$storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresentBucket -ErrorAction SilentlyContinue
+if ($notPresentBucket) {
+    Write-Host 'notPresent'
+    $storageAcct = New-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -Location $location -SkuName Standard_RAGRS -Kind StorageV2
+    $share = New-AzStorageShare -Name $SAShareName -Context $storageAcct.Context
+} else {
+    Write-Host 'Present'
+    $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresent -ErrorAction SilentlyContinue
+    $share = Get-AzStorageShare -Name $SAShareName -Context $storageAcct.Context
+}
+
+$token = New-AzureStorageAccountSASToken -ResourceType Service,Container,Object -Service file -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context
+
+$localFileDirectory = '.\'
+$files = Get-ChildItem -Path $localFileDirectory -File
+foreach($file in $files)
+{
+    $localFile = $localFileDirectory+$file
+    Set-AzStorageFileContent  -Share $share -Source $localFile -Force
+}
+
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -containerSasToken $token

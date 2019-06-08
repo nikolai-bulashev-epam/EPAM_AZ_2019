@@ -15,7 +15,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(variables('templateBaseUrl'), 'HW_03_VMnet.json')]",
+          "uri": "VMnet.json",
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
