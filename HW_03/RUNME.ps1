@@ -21,11 +21,12 @@ if ($notPresentBucket) {
 #$token = New-AzureStorageAccountSASToken -ResourceType Service,Container,Object -Service file -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context
 
 $localFileDirectory = '.\'
-$files = Get-ChildItem -Path $localFileDirectory -File
+$files = Get-ChildItem -Path $localFileDirectory -File -Recurse
 foreach($file in $files)
 {
+    Write-Host $file
     $localFile = $localFileDirectory+$file
-    set-AzStorageblobcontent  -File $localFile -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
+    set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
 
 New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SAName $SAName -RGName $RGName
