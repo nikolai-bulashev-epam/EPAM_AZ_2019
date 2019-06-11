@@ -2,9 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "containerSasToken": {
-      "type": "string"
-    },
     "SAName": {
       "type": "string"
     },
@@ -13,7 +10,7 @@
     }
   },
   "variables": {
-    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.file.core.windows.net/',parameters('RGName'),'/')]"
+    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',parameters('RGName'),'/')]"
   },
   "resources": [
     {
@@ -23,11 +20,11 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json')]",
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json',parameters('containerSasToken'))]",
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json')]",
             "contentVersion":"1.0.0.0"
         }
       }
@@ -39,7 +36,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'SA.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'), 'SA.json')]",
           "contentVersion": "1.0.0.0"
         }
       }
