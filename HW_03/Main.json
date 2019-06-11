@@ -2,10 +2,18 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "containerSasToken": {
+      "type": "string"
+    },
+    "SAName": {
+      "type": "string"
+    },
+    "RGName": {
+      "type": "string"
+    }
   },
   "variables": {
-    "HomeWorkCode": "03",
-    "templateBaseUrl": "[concat('https://raw.githubusercontent.com/nikolai-bulashev-epam/EPAM_AZ_2019/master/HW_', variables('HomeWorkCode'),'/')]"
+    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.file.core.windows.net/',parameters('RGName'),'/')]"
   },
   "resources": [
     {
@@ -15,11 +23,11 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "VMnet.json",
+          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json',parameters('containerSasToken'))]",
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat('https://raw.githubusercontent.com/nikolai-bulashev-epam/EPAM_AZ_2019/master/HW_', variables('HomeWorkCode'),'/HW_', variables('HomeWorkCode'), '_Param.json')]",
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json',parameters('containerSasToken'))]",
             "contentVersion":"1.0.0.0"
         }
       }
@@ -31,10 +39,20 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[uri(variables('templateBaseUrl'), 'HW_03_SA.json')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'SA.json',parameters('containerSasToken'))]",
           "contentVersion": "1.0.0.0"
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "SAname" : {
+      "type" : "string",
+      "value": "[reference('sa').outputs.storageAccountName.value]"
+    },
+    "VnetName" : {
+      "type" : "string",
+      "value": "[reference('vnet').outputs.VMNetOutput.value]"
+    }
+  }
 }
