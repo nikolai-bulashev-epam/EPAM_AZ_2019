@@ -2,18 +2,28 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "containerSasToken": {
-      "type": "string"
-    },
     "SAName": {
       "type": "string"
     },
     "RGName": {
       "type": "string"
+    },
+    "VMpassword": {
+      "type": "string",
+      "defaultValue": "l8}U?N[X3me3"
     }
   },
   "variables": {
-    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.file.core.windows.net/',parameters('RGName'),'/')]"
+    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',parameters('RGName'),'/')]",
+    "keyVault-settings": {
+      "name": "[concat(parameters('RGName'),'vault')]",
+      "vm01": {
+        "secret": "[parameters('VMpassword')]",
+        "secretName": "vm01password"
+      },
+      "kvids" : "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('RGName'), '/providers/Microsoft.KeyVault/vaults/', concat(parameters('RGName'),'vault'))]"
+    }
+
   },
   "resources": [
     {
@@ -23,11 +33,11 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json')]",
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json',parameters('containerSasToken'))]",
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json')]",
             "contentVersion":"1.0.0.0"
         }
       }
@@ -39,7 +49,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'SA.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'), 'SA.json')]",
           "contentVersion": "1.0.0.0"
         }
       }
@@ -51,14 +61,16 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'KVault.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'), 'KVault.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "keyVaultName": {"value": "[concat(parameters('RGName'),'vault')]"},
+          "keyVaultName": {"value": "[variables('keyVault-settings').name]"},
           "objectId": {"value": "8daada0b-d2d0-4d03-b957-764919e5178a"},
           "keysPermissions": {"value": ["all"]},
-          "secretsPermissions": {"value": ["all"]}
+          "secretsPermissions": {"value": ["all"]},
+          "secretName": {"value": "[variables('keyVault-settings').vm01.secretName]"},
+          "secretValue": {"value": "[variables('keyVault-settings').vm01.secret]"}
         }
       }
     },
@@ -69,17 +81,59 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json',parameters('containerSasToken'))]",
+          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
           "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
-          "adminPassword" : {"value": "l8}U?N[X3me3"},
-          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine01')]"}
+          "adminPassword": { 
+            "reference": {
+                            "keyVault": {
+                                "id": "[reference('kv').outputs.KVUri.value]"
+                            },
+                            "secretName": "[variables('keyVault-settings').vm01.secretName]"
+                        }
+          },
+          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine01')]"},
+          "ModulesUrl": {"value": "[concat(variables('templateBaseUrl'), 'iis.zip')]"},
+          "IndexFileUrl": {"value": "[concat(variables('templateBaseUrl'), 'iisstart.html')]"},
+          "ConfigurationFunction": {"value": "iis.ps1\\ContosoWebsite"}
         }
       },
       "dependsOn": [
-        "kv"
+        "kv",
+        "vmnet"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "VM02",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'), 'VmachineLin.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
+          "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
+          "authenticationType": {"value": "password"},
+          "adminPasswordOrKey": { 
+            "reference": {
+                            "keyVault": {
+                                "id": "[reference('kv').outputs.KVUri.value]"
+                            },
+                            "secretName": "[variables('keyVault-settings').vm01.secretName]"
+                        }
+          },
+          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine02')]"}
+        }
+      },
+      "dependsOn": [
+        "kv",
+        "vmnet"
       ]
     }
   ],
@@ -91,6 +145,10 @@
     "VnetName" : {
       "type" : "string",
       "value": "[reference('vmnet').outputs.VMNetOutput.value]"
+    },
+    "KVUri" : {
+      "type" : "string",
+      "value": "[reference('kv').outputs.KVUri.value]"
     }
   }
 }

@@ -2,6 +2,14 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+      "secretValue" : {
+        "type": "string",
+        "defaultValue": "N0tS0$tr0ngp@$$w0rd"
+      },
+      "secretName" : {
+        "type": "string",
+        "defaultValue": "undefSecret"
+      },
       "keyVaultName": {
         "type": "string",
         "metadata": {
@@ -123,6 +131,26 @@
             }
           }
         }
+      },
+
+
+      {
+        "type": "Microsoft.KeyVault/vaults/secrets",
+        "name": "[concat(parameters('keyVaultName'), '/', parameters('secretName'))]",
+        "apiVersion": "2015-06-01",
+        "properties": {
+          "contentType": "text/plain",
+          "value": "[parameters('secretValue')]"
+        },
+        "dependsOn": [
+          "[parameters('keyVaultName')]"
+        ]
       }
-    ]
+    ],
+    "outputs": {
+      "KVUri" : {
+        "type": "string",
+        "value": "[resourceId(subscription().subscriptionId,  'HW04', 'Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+      }
+    }
   }

@@ -53,8 +53,8 @@
   ],
   "outputs": {
     "VMNetOutput": {
-      "type": "string",
-      "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('VNetSettings').vnetName)]"
+      "type": "object",
+      "value": "[parameters('VNetSettings')]"
     }
   }
 }

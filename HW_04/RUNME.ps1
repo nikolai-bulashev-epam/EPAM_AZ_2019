@@ -1,7 +1,7 @@
 $RGName = 'hw04'
 $location = 'westeurope'
 $SAName = 'hw04startupfolder'
-$SAShareName = $RGName
+$blobContainerName = $RGName
 Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
 if ($notPresent) {
@@ -10,20 +10,24 @@ if ($notPresent) {
 
 $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresentBucket -ErrorAction SilentlyContinue
 if ($notPresentBucket) {
+    Write-Host 'notPresent'
     $storageAcct = New-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -Location $location -SkuName Standard_RAGRS -Kind StorageV2
-    $share = New-AzStorageShare -Name $SAShareName -Context $storageAcct.Context
+    new-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context  -Permission blob
 } else {
+    Write-Host 'Present'
     $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresent -ErrorAction SilentlyContinue
-    $share = Get-AzStorageShare -Name $SAShareName -Context $storageAcct.Context
+    Get-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context
 }
 
-$token = New-AzStorageAccountSASToken -ResourceType Service,Container,Object -Service Blob,File,Table,Queue -Permission "ral" -context $storageAcct.Context
+Install-Module -Name xPSDesiredStateConfiguration -Scope CurrentUser
+Publish-AzVMDscConfiguration ".\dsc\iis.ps1" -OutputArchivePath ".\DSC\iis.zip" -Force
 
-Write-Host $token
 $localFileDirectory = '.\'
-$files = Get-ChildItem -Path $localFileDirectory -File -Recurse | Select-Object -ExpandProperty Fullname
+$files = Get-ChildItem -Path $localFileDirectory -File -Recurse
 foreach($file in $files)
 {
-    Set-AzStorageFileContent  -Share $share -Source $file -Force
+    Write-Host $file
+    set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -containerSasToken $token -SAName $SAName -RGName $RGName 
+
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SAName $SAName -RGName $RGName

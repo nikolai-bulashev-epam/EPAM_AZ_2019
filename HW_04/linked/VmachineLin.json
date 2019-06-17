@@ -8,13 +8,24 @@
       "adminUsername": {
         "type": "string",
         "metadata": {
-          "description": "Username for the Virtual Machine."
+          "description": "User name for the Virtual Machine."
         }
       },
-      "adminPassword": {
+      "authenticationType": {
+        "type": "string",
+        "defaultValue": "sshPublicKey",
+        "allowedValues": [
+          "sshPublicKey",
+          "password"
+        ],
+        "metadata": {
+          "description": "Type of authentication to use on the Virtual Machine. SSH key is recommended."
+        }
+      },
+      "adminPasswordOrKey": {
         "type": "securestring",
         "metadata": {
-          "description": "Password for the Virtual Machine."
+          "description": "SSH Key or password for the Virtual Machine. SSH key is recommended."
         }
       },
       "dnsLabelPrefix": {
@@ -23,20 +34,17 @@
           "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
         }
       },
-      "windowsOSVersion": {
+      "ubuntuOSVersion": {
         "type": "string",
-        "defaultValue": "2016-Datacenter",
+        "defaultValue": "16.04.0-LTS",
         "allowedValues": [
-          "2008-R2-SP1",
-          "2012-Datacenter",
-          "2012-R2-Datacenter",
-          "2016-Nano-Server",
-          "2016-Datacenter-with-Containers",
-          "2016-Datacenter",
-          "2019-Datacenter"
+          "12.04.5-LTS",
+          "14.04.5-LTS",
+          "16.04.0-LTS",
+          "18.04-LTS"
         ],
         "metadata": {
-          "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+          "description": "The Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
         }
       },
       "location": {
@@ -45,29 +53,34 @@
         "metadata": {
           "description": "Location for all resources."
         }
-      },
-      "modulesUrl": {
-        "type": "string"
-      },
-      "IndexFileUrl": {
-        "type": "string"
-      },
-      "configurationFunction": {
-        "type": "string",
-        "defaultValue": ""
       }
     },
     "variables": {
-      "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'sawinvm')]",
+      "storageAccountName": "[concat(uniquestring(resourceGroup().id), 'salinuxvm')]",
+      "imagePublisher": "Canonical",
+      "imageOffer": "UbuntuServer",
       "nicName": "[concat(variables('vmName'), 'myVMNic')]",
       "addressPrefix": "[parameters('VNetSettings').addressPrefixes[0].addressPrefix]",
       "subnetName": "[parameters('VNetSettings').subnets[0].name]",
       "subnetPrefix": "[parameters('VNetSettings').subnets[0].addressPrefix]",
+      "storageAccountType": "Standard_LRS",
       "publicIPAddressName": "[concat(variables('vmName'), 'myPublicIP')]",
-      "vmName": "[concat(resourceGroup().Name,'SimpleWinVM')]",
+      "publicIPAddressType": "Dynamic",
+      "vmName": "[concat(resourceGroup().Name,'MyUbuntuVM')]",
+      "vmSize": "Standard_A1",
       "virtualNetworkName": "[parameters('VNetSettings').vnetName]",
-      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-      "vmExtensionName": "dscExtension"
+      "linuxConfiguration": {
+        "disablePasswordAuthentication": true,
+        "ssh": {
+          "publicKeys": [
+            {
+              "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+              "keyData": "[parameters('adminPasswordOrKey')]"
+            }
+          ]
+        }
+      },
+      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
     },
     "resources": [
       {
@@ -76,7 +89,7 @@
         "name": "[variables('storageAccountName')]",
         "location": "[parameters('location')]",
         "sku": {
-          "name": "Standard_LRS"
+          "name": "[variables('storageAccountType')]"
         },
         "kind": "Storage",
         "properties": {}
@@ -87,7 +100,7 @@
         "name": "[variables('publicIPAddressName')]",
         "location": "[parameters('location')]",
         "properties": {
-          "publicIPAllocationMethod": "Dynamic",
+          "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
           "dnsSettings": {
             "domainNameLabel": "[parameters('dnsLabelPrefix')]"
           }
@@ -141,30 +154,6 @@
         }
       },
       {
-        "apiVersion": "2015-05-01-preview",
-        "type": "Microsoft.Network/networkSecurityGroups",
-        "name": "NSG8080",
-        "location": "[parameters('location')]",
-        "properties": {
-          "securityRules": [
-            {
-              "name": "Allow_NSG_8080",
-              "properties": {
-                "description": "Allow 8080 from outside",
-                "protocol": "Tcp",
-                "sourcePortRange": "*",
-                "destinationPortRange": "8080",
-                "sourceAddressPrefix": "*",
-                "destinationAddressPrefix": "*",
-                "access": "Allow",
-                "priority": 100,
-                "direction": "Inbound"
-              }
-            }
-          ]
-        }
-      },
-      {
         "type": "Microsoft.Compute/virtualMachines",
         "apiVersion": "2018-10-01",
         "name": "[variables('vmName')]",
@@ -175,18 +164,19 @@
         ],
         "properties": {
           "hardwareProfile": {
-            "vmSize": "Standard_A2"
+            "vmSize": "[variables('vmSize')]"
           },
           "osProfile": {
             "computerName": "[variables('vmName')]",
             "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminPassword')]"
+            "adminPassword": "[parameters('adminPasswordOrKey')]",
+            "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
           },
           "storageProfile": {
             "imageReference": {
-              "publisher": "MicrosoftWindowsServer",
-              "offer": "WindowsServer",
-              "sku": "[parameters('windowsOSVersion')]",
+              "publisher": "[variables('imagePublisher')]",
+              "offer": "[variables('imageOffer')]",
+              "sku": "[parameters('ubuntuOSVersion')]",
               "version": "latest"
             },
             "osDisk": {
@@ -210,33 +200,9 @@
           "diagnosticsProfile": {
             "bootDiagnostics": {
               "enabled": true,
-              "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
+              "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
             }
           }
-        }
-      },
-      {
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(variables('vmName'),'/', variables('vmExtensionName'))]",
-        "apiVersion": "2015-05-01-preview",
-        "location": "[parameters('location')]",
-        "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
-        ],
-        "properties": {
-          "publisher": "Microsoft.Powershell",
-          "type": "DSC",
-          "typeHandlerVersion": "2.19",
-          "autoUpgradeMinorVersion": true,
-          "settings": {
-            "ModulesUrl": "[parameters('modulesUrl')]",
-            "ConfigurationFunction": "[parameters('configurationFunction')]",
-            "Properties": {
-              "MachineName": "[variables('vmName')]",
-              "indexFileUrl": "[parameters('IndexFileUrl')]"
-            }
-          },
-          "protectedSettings": null
         }
       }
     ],
@@ -244,6 +210,10 @@
       "hostname": {
         "type": "string",
         "value": "[reference(variables('publicIPAddressName')).dnsSettings.fqdn]"
+      },
+      "sshCommand": {
+        "type": "string",
+        "value": "[concat('ssh ', parameters('adminUsername'), '@', reference(variables('publicIPAddressName')).dnsSettings.fqdn)]"
       }
     }
   }
