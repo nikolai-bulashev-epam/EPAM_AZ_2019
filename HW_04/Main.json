@@ -5,11 +5,14 @@
     "SAName": {
       "type": "string"
     },
+    "SASToken": {
+      "type": "string"
+    },
     "RGName": {
       "type": "string"
     },
     "VMpassword": {
-      "type": "string",
+      "type": "securestring",
       "defaultValue": "l8}U?N[X3me3"
     }
   },
@@ -33,11 +36,11 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json')]",
+          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json', parameters('SASToken'))]",
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json')]",
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json', parameters('SASToken'))]",
             "contentVersion":"1.0.0.0"
         }
       }
@@ -49,7 +52,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'SA.json')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'SA.json', parameters('SASToken'))]",
           "contentVersion": "1.0.0.0"
         }
       }
@@ -61,7 +64,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'KVault.json')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'KVault.json', parameters('SASToken'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -81,8 +84,8 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json')]",
-          "contentVersion": "1.0.0.0"
+          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json', parameters('SASToken'))]",
+          "contentVersion": "1.0.0.1"
         },
         "parameters": {
           "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
@@ -96,8 +99,8 @@
                         }
           },
           "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine01')]"},
-          "ModulesUrl": {"value": "[concat(variables('templateBaseUrl'), 'iis.zip')]"},
-          "IndexFileUrl": {"value": "[concat(variables('templateBaseUrl'), 'iisstart.html')]"},
+          "ModulesUrl": {"value": "[concat(variables('templateBaseUrl'), 'iis.zip', parameters('SASToken'))]"},
+          "IndexFileUrl": {"value": "[concat(variables('templateBaseUrl'), 'iisstart.html', parameters('SASToken'))]"},
           "ConfigurationFunction": {"value": "iis.ps1\\ContosoWebsite"}
         }
       },
@@ -113,22 +116,17 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'VmachineLin.json')]",
+          "uri": "[concat(variables('templateBaseUrl'), 'VmachineLin.json', parameters('SASToken'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
           "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
           "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
           "authenticationType": {"value": "password"},
-          "adminPasswordOrKey": { 
-            "reference": {
-                            "keyVault": {
-                                "id": "[reference('kv').outputs.KVUri.value]"
-                            },
-                            "secretName": "[variables('keyVault-settings').vm01.secretName]"
-                        }
-          },
-          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine02')]"}
+          "adminPasswordOrKey": { "value": "l8}U?N[X3me3"},
+          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine02')]"},
+          "CustomScriptURL": {"value": "[concat(variables('templateBaseUrl'), 'apache2.sh', parameters('SASToken'))]"},
+          "commandToExecute": {"value": "/bin/sh apache2.sh"}
         }
       },
       "dependsOn": [
@@ -141,10 +139,6 @@
     "SAname" : {
       "type" : "string",
       "value": "[reference('sa').outputs.storageAccountName.value]"
-    },
-    "VnetName" : {
-      "type" : "string",
-      "value": "[reference('vmnet').outputs.VMNetOutput.value]"
     },
     "KVUri" : {
       "type" : "string",

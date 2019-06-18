@@ -5,6 +5,12 @@
       "VNetSettings": {
         "type": "object"
       },
+      "CustomScriptURL": {
+        "type": "string"
+      },
+      "commandToExecute": {
+        "type": "string"
+      },
       "adminUsername": {
         "type": "string",
         "metadata": {
@@ -60,9 +66,7 @@
       "imagePublisher": "Canonical",
       "imageOffer": "UbuntuServer",
       "nicName": "[concat(variables('vmName'), 'myVMNic')]",
-      "addressPrefix": "[parameters('VNetSettings').addressPrefixes[0].addressPrefix]",
       "subnetName": "[parameters('VNetSettings').subnets[0].name]",
-      "subnetPrefix": "[parameters('VNetSettings').subnets[0].addressPrefix]",
       "storageAccountType": "Standard_LRS",
       "publicIPAddressName": "[concat(variables('vmName'), 'myPublicIP')]",
       "publicIPAddressType": "Dynamic",
@@ -107,34 +111,12 @@
         }
       },
       {
-        "type": "Microsoft.Network/virtualNetworks",
-        "apiVersion": "2018-11-01",
-        "name": "[variables('virtualNetworkName')]",
-        "location": "[parameters('location')]",
-        "properties": {
-          "addressSpace": {
-            "addressPrefixes": [
-              "[variables('addressPrefix')]"
-            ]
-          },
-          "subnets": [
-            {
-              "name": "[variables('subnetName')]",
-              "properties": {
-                "addressPrefix": "[variables('subnetPrefix')]"
-              }
-            }
-          ]
-        }
-      },
-      {
         "type": "Microsoft.Network/networkInterfaces",
         "apiVersion": "2018-11-01",
         "name": "[variables('nicName')]",
         "location": "[parameters('location')]",
         "dependsOn": [
           "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
-          "[resourceId('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
         ],
         "properties": {
           "ipConfigurations": [
@@ -202,6 +184,25 @@
               "enabled": true,
               "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
             }
+          }
+        }
+      },
+      {
+        "name": "[concat(variables('vmName'),'/installcustomscript')]",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "location": "[resourceGroup().location]",
+        "apiVersion": "2015-06-15",
+        "dependsOn": [
+          "[concat('Microsoft.Compute/virtualMachines/', concat(variables('vmName')))]"
+        ],
+        "properties": {
+          "publisher": "Microsoft.Azure.Extensions",
+          "type": "CustomScript",
+          "typeHandlerVersion": "2.0",
+          "autoUpgradeMinorVersion": true,
+          "settings": {
+            "fileUris": ["[parameters('CustomScriptURL')]"],
+            "commandToExecute": "[parameters('commandToExecute')]"
           }
         }
       }

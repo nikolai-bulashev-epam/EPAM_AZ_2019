@@ -9,7 +9,8 @@ Configuration ContosoWebsite
       $indexFileUrl
   )
 
-  Import-DscResource -ModuleName PsDesiredStateConfiguration
+  Import-DscResource -ModuleName xPsDesiredStateConfiguration
+  Import-DscResource -ModuleName PSDesiredStateConfiguration
   Import-DscResource -ModuleName xWebAdministration
   Import-DscResource -ModuleName xNetworking
   Import-DscResource -ModuleName FileContentDsc
@@ -45,7 +46,7 @@ Configuration ContosoWebsite
         BindingInfo = MSFT_xWebBindingInformation
         {
             Protocol = "HTTP"
-            Port = 81
+            Port = 8080
         }
         DependsOn = "[WindowsFeature]IIS"
     }
@@ -62,12 +63,12 @@ Configuration ContosoWebsite
         Enabled     = 'True'
     }
 
-
-    xRemoteFile DownloadFile
-    {
-        DestinationPath = 'C:\inetpub\wwwroot\isstart.html'
-        Uri             = $indexFileUrl
-        MatchSource     = $false
+    File FileDemo {
+      DestinationPath = 'c:\inetpub\wwwroot\index.html'
+      Ensure = "Present"
+      Contents = 'Hello world!!!'
+      DependsOn       = "[xWebsite]DefaultWebsite"
     }
+
   }
 } 
