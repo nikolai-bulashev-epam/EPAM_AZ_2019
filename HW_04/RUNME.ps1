@@ -36,7 +36,7 @@ $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -Er
 if ($notPresentBucket) {
     Write-Host 'notPresent'
     $storageAcct = New-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -Location $location -SkuName Standard_RAGRS -Kind StorageV2
-    new-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context  -Permission Private
+    new-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context
 } else {
     Write-Host 'Present'
     $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresent -ErrorAction SilentlyContinue
