@@ -1,6 +1,7 @@
 $RGName = 'hw05'
 $location = 'westeurope'
-$SAName = 'hw04startupfolder'
+$anotherlocation = 'japanwest'
+$SAName = 'hw05startupfolder'
 $blobContainerName = $RGName
 Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
@@ -19,6 +20,8 @@ if ($notPresentBucket) {
     Get-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context
 }
 
+$token = New-AzStorageContainerSASToken -Name  $blobContainerName -Permission rwdl -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context 
+
 $localFileDirectory = '.\'
 $files = Get-ChildItem -Path $localFileDirectory -File -Recurse
 foreach($file in $files)
@@ -26,4 +29,4 @@ foreach($file in $files)
     Write-Host $file
     set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -uniqueDnsNameForWebApp "hw05yetanotherwapp" -uniqueDnsName "hw05uniqueapp"
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -uniqueDnsNameForWebApp "hw05yetanotherwapp" -uniqueDnsName "hw05uniqueapp" -SASToken $token -RGName $RGName -SAName $SAName -anotherlocation $anotherlocation
