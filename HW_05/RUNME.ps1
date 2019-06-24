@@ -1,7 +1,7 @@
 $RGName = 'hw05'
 $location = 'westeurope'
 $anotherlocation = 'japanwest'
-$SAName = 'hw05startupfolder'
+$SAName = $RGName+'startupfolder'
 $blobContainerName = $RGName
 Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
@@ -29,4 +29,4 @@ foreach($file in $files)
     Write-Host $file
     set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -uniqueDnsNameForWebApp "hw05yetanotherwapp" -uniqueDnsName "hw05uniqueapp" -SASToken $token -RGName $RGName -SAName $SAName -anotherlocation $anotherlocation
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -TemplateParameterFile 'parameters.json'

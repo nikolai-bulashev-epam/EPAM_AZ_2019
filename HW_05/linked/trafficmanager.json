@@ -16,17 +16,27 @@
         },
         "webAppLocations": {
             "type": "array"
+        },
+        "TMPreffix": {
+          "type": "string"
+        },
+        "TRMethod": {
+          "type": "string",
+          "defaultValue": "Priority"
         }
+    },
+    "variables": {
+      "TMName": "[concat(parameters('TMPreffix'),'TMProfile')]"
     },
     "resources": [
         {
             "apiVersion": "2015-11-01",
             "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
             "dependsOn": [
-              "Microsoft.Network/trafficManagerProfiles/HW05TMProfile"
+              "[concat('Microsoft.Network/trafficManagerProfiles/',variables('TMname'))]"
             ],
             "location": "global",
-            "name": "[concat('HW05TMProfile/Endpoint', copyIndex())]",
+            "name": "[concat(variables('TMname'),'/Endpoint', copyIndex())]",
             "copy": {
               "name": "endpointloop",
               "count": "[length(parameters('webAppLocations'))]"
@@ -39,11 +49,11 @@
         {
             "apiVersion": "2015-11-01",
             "type": "Microsoft.Network/trafficManagerProfiles",
-            "name": "HW05TMProfile",
+            "name": "[variables('TMname')]",
             "location": "global",
             "properties": {
               "profileStatus": "Enabled",
-              "trafficRoutingMethod": "Priority",
+              "trafficRoutingMethod": "[parameters('TRMethod')]",
               "dnsConfig": {
                 "relativeName": "[parameters('uniqueDnsName')]",
                 "ttl": 30
@@ -55,5 +65,15 @@
               }
             }
         }
-    ]
+    ],
+    "outputs": {
+      "trafficManagerFqdn": {
+        "type": "string",
+        "value": "[reference(variables('TMname'), '2015-11-01').dnsConfig.fqdn]"
+      },
+      "trafficManagerEndpoints": {
+        "type": "array",
+        "value": "[reference(variables('TMname'), '2015-11-01').endpoints]"
+      }
+    }
   }

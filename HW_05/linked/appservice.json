@@ -24,7 +24,8 @@
             "location": "[parameters('webAppLocations')[copyIndex()]]",
             "sku": {
                 "name": "S1",
-                "tier": "Standard"
+                "tier": "Standard",
+                "capacity": 2
             }
         },
         {
