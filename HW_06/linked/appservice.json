@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "uniqueDnsNameForWebApp" : {
+          "type": "string"
+      },
+      "uniqueDnsName" : {
+          "type": "string"
+      },
+      "webAppLocations": {
+        "type": "array"
+      },
+      "DatabaseConnectionString": {
+          "type": "securestring"
+      },
+      "repoURL": {
+        "type": "string",
+        "metadata": {
+          "description": "The URL for the GitHub repository that contains the project to deploy."
+        }
+      }
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[concat('HW5AppServicePlan', copyIndex())]",
+            "type": "Microsoft.Web/serverfarms",
+            "copy": {
+                "name": "farmloop",
+                "count": "[length(parameters('webAppLocations'))]"
+            },
+            "location": "[parameters('webAppLocations')[copyIndex()]]",
+            "sku": {
+                "name": "S1",
+                "tier": "Standard",
+                "capacity": 2
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[concat(parameters('uniqueDnsNameForWebApp'), copyIndex())]",
+            "type": "Microsoft.Web/sites",
+            "copy": {
+                "name": "siteloop",
+                "count": "[length(parameters('webAppLocations'))]"
+            },
+            "location": "[parameters('webAppLocations')[copyIndex()]]",
+            "dependsOn": [ "[concat('HW5AppServicePlan', copyIndex())]" ],
+            "properties": {
+                "serverFarmId": "[concat('HW5AppServicePlan', copyIndex())]",
+                "siteConfig": {
+                    "phpVersion": "5.6",
+                    "connectionStrings": [
+                      {
+                        "name": "DB_CONN_STR",
+                        "connectionString": "[parameters('DatabaseConnectionString')]",
+                        "type": 2
+                      }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                  "apiVersion": "2015-08-01",
+                  "name": "web",
+                  "type": "sourcecontrols",
+                  "dependsOn": [
+                    "[concat(parameters('uniqueDnsNameForWebApp'), copyIndex())]"
+                  ],
+                  "properties": {
+                    "RepoUrl": "[parameters('repoURL')]",
+                    "branch": "master",
+                    "IsManualIntegration": true
+                  }
+                }
+              ]
+        }
+    ],
+    "outputs": {
+        "uniqueDnsNameForWebApp" : {
+            "type": "string",
+            "value": "[parameters('uniqueDnsNameForWebApp')]"
+        },
+        "uniqueDnsName" : {
+            "type": "string",
+            "value": "[parameters('uniqueDnsName')]"
+        }
+    }
+  }

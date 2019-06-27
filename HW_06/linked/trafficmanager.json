@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "uniqueDnsNameForWebApp": {
+          "type": "string",
+          "metadata": {
+            "description": "Relative DNS name for the WebApps, must be globally unique.  An index will be appended for each Web App."
+          }
+        },
+        "uniqueDnsName": {
+            "type": "string",
+            "metadata": {
+                "description": "Relative DNS name for the traffic manager profile, resulting FQDN will be <uniqueDnsName>.trafficmanager.net, must be globally unique."
+            }
+        },
+        "webAppLocations": {
+            "type": "array"
+        },
+        "TMPreffix": {
+          "type": "string"
+        },
+        "TRMethod": {
+          "type": "string",
+          "defaultValue": "Priority"
+        }
+    },
+    "variables": {
+      "TMName": "[concat(parameters('TMPreffix'),'TMProfile')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-11-01",
+            "type": "Microsoft.Network/trafficManagerProfiles/azureEndpoints",
+            "dependsOn": [
+              "[concat('Microsoft.Network/trafficManagerProfiles/',variables('TMname'))]"
+            ],
+            "location": "global",
+            "name": "[concat(variables('TMname'),'/Endpoint', copyIndex())]",
+            "copy": {
+              "name": "endpointloop",
+              "count": "[length(parameters('webAppLocations'))]"
+            },
+            "properties": {
+              "targetResourceId": "[resourceId('Microsoft.Web/sites/', concat(parameters('uniqueDnsNameForWebApp'), copyIndex()))]",
+              "endpointStatus": "Enabled"
+            }
+        },
+        {
+            "apiVersion": "2015-11-01",
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "name": "[variables('TMname')]",
+            "location": "global",
+            "properties": {
+              "profileStatus": "Enabled",
+              "trafficRoutingMethod": "[parameters('TRMethod')]",
+              "dnsConfig": {
+                "relativeName": "[parameters('uniqueDnsName')]",
+                "ttl": 30
+              },
+              "monitorConfig": {
+                "protocol": "HTTP",
+                "port": 80,
+                "path": "/"
+              }
+            }
+        }
+    ],
+    "outputs": {
+      "trafficManagerFqdn": {
+        "type": "string",
+        "value": "[reference(variables('TMname'), '2015-11-01').dnsConfig.fqdn]"
+      },
+      "trafficManagerEndpoints": {
+        "type": "array",
+        "value": "[reference(variables('TMname'), '2015-11-01').endpoints]"
+      }
+    }
+  }

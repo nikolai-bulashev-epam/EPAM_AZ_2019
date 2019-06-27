@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+       "uniqueDnsNameForWebApp": {
+           "value": "hw06yetanotherwapp"
+       },
+       "uniqueDnsName": {
+           "value": "hw06uniqueapp"
+       },
+       "anotherlocation": {
+           "value": "japanwest"
+       }
+    }
+  }

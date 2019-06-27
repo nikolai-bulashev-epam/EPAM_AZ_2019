@@ -79,8 +79,8 @@
         "value": "[reference('tmanager').outputs.trafficManagerFqdn.value]"
       },
       "trafficManagerEndpoints" : {
-        "type" : "array",
-        "value": "[reference('tmanager').outputs.trafficManagerEndpoints.value]"
+        "type" : "object",
+        "value": "[reference('tmanager').outputs.trafficManagerEndpoints]"
       }
     }
   }
