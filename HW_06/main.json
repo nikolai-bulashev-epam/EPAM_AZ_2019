@@ -122,7 +122,8 @@
                   "secretName": "[variables('keyVault-settings').sql01.secretName]"
                 }
               },
-              "databaseName" : {"value": "AdventureWorks"}
+              "databaseName" : {"value": "AdventureWorks"},
+              "_artifactsLocationSasToken": {"value": "[parameters('SASToken')]"}
           }
         }
       }
@@ -139,6 +140,10 @@
       "sqlConnectionString" : {
         "type" : "securestring",
         "value": "[reference('ssde').outputs.DatabaseConnectionString.value]"
+      },
+      "sqlServerFqdn": {
+        "type": "string",
+        "value": "[reference('ssde').outputs.sqlServerFqdn.value]"
       }
     }
   }
