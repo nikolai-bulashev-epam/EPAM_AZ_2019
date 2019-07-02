@@ -54,7 +54,5 @@ foreach($file in $files)
     Write-Host $file
     set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-$deployment = New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -TemplateParameterFile 'parameters.json' -sqlpassword $SQLsecureStringPswd 
-Write-Host '---------------'
-Write-Host $token
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -TemplateParameterFile 'parameters.json' -sqlpassword $SQLsecureStringPswd 
 

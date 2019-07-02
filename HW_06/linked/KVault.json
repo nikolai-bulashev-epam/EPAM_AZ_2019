@@ -149,6 +149,10 @@
       "KVUri" : {
         "type": "string",
         "value": "[resourceId(subscription().subscriptionId, 'HW06', 'Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
+      }, 
+      "TenantID": {
+        "type": "string",
+        "value": "[parameters('tenantId')]"
       }
     }
   }

@@ -76,7 +76,6 @@
               "edition": "[variables('databaseEdition')]",
               "collation": "[variables('databaseCollation')]",
               "requestedServiceObjectiveName": "[variables('databaseServiceObjectiveName')]",
-              "sampleName": "WideWorldImportersStd"
             },
             "dependsOn": [
               "[variables('sqlServerName')]"
