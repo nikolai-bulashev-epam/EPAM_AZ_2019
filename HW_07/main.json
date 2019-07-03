@@ -129,13 +129,7 @@
                 }
               },
               "databaseName" : {"value": "[parameters('databaseName')]"},
-              "_artifactsLocationSasToken": {"value": "[parameters('SASToken')]"},
-              "tier": {
-                "value": "Standard"
-              },
-              "skuName": {
-                "value": "S1"
-              }
+              "_artifactsLocationSasToken": {"value": "[parameters('SASToken')]"}
           }
         }
       }

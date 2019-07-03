@@ -1,135 +1,131 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "sqlAdministratorLogin": {
-        "type": "string",
-        "metadata": {
-          "description": "The administrator username of the SQL Server."
-        }
-      },
-      "sqlAdministratorLoginPassword": {
-        "type": "securestring",
-        "metadata": {
-          "description": "The administrator password of the SQL Server."
-        }
-      },
-      "transparentDataEncryption": {
-        "type": "string",
-        "allowedValues": [
-          "Enabled",
-          "Disabled"
-        ],
-        "defaultValue": "Enabled",
-        "metadata": {
-          "description": "Enable or disable Transparent Data Encryption (TDE) for the database."
-        }
-      },
-      "location": {
-        "type": "string",
-        "defaultValue": "[resourceGroup().location]",
-        "metadata": {
-          "description": "Location for all resources."
-        }
-      },
-      "databaseName": {
-          "type": "string",
-          "defaultValue": "defaultDatabase001"
-      },
-      "_artifactsLocationSasToken": {
-        "type": "securestring"
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sqlAdministratorLogin": {
+      "type": "string",
+      "metadata": {
+        "description": "The administrator username of the SQL Server."
       }
     },
-    "variables": {
-      "sqlServerName": "[concat('sqlserver', resourceGroup().name)]",
-      "databaseName": "[parameters('databaseName')]",
-      "databaseEdition": "Basic",
-      "databaseCollation": "SQL_Latin1_General_CP1_CI_AS",
-      "databaseServiceObjectiveName": "Basic",
-      "deployPackageFolder": "[resourceGroup().name]",
-      "deployPackageFileName": "AdventureWorksLT-2019-6-28-15-54.bacpac"
+    "sqlAdministratorLoginPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The administrator password of the SQL Server."
+      }
     },
-    "resources": [
-      {
-        "name": "[variables('sqlServerName')]",
-        "type": "Microsoft.Sql/servers",
-        "apiVersion": "2014-04-01-preview",
-        "location": "[parameters('location')]",
-        "tags": {
-          "displayName": "SqlServer"
-        },
-        "properties": {
-          "administratorLogin": "[parameters('sqlAdministratorLogin')]",
-          "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
-          "version": "12.0"
-        },
-        "resources": [
-          {
-            "name": "[variables('databaseName')]",
-            "type": "databases",
-            "apiVersion": "2015-01-01",
-            "location": "[parameters('location')]",
-            "tags": {
-              "displayName": "[variables('databaseName')]"
-            },
-            "properties": {
-              "edition": "[variables('databaseEdition')]",
-              "collation": "[variables('databaseCollation')]",
-              "requestedServiceObjectiveName": "[variables('databaseServiceObjectiveName')]",
-            },
-            "dependsOn": [
-              "[variables('sqlServerName')]"
-            ],
-            "resources": [
-              {
-                "name": "Import",
-                "type": "extensions",
-                "apiVersion": "2014-04-01-preview",
-                "dependsOn":
-                [
-                  "[variables('sqlServerName')]",
-                  "[variables('databaseName')]"
-                ],
-                "properties":
-                {
-                  "storageKeyType": "SharedAccessKey",
-                  "storageKey": "[parameters('_artifactsLocationSasToken')]",
-                  "storageUri": "[concat('https://hw06startupfolder.blob.core.windows.net/hw06/',variables('deployPackageFileName'))]",
-                  "administratorLogin": "[parameters('sqlAdministratorLogin')]",
-                  "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
-                  "operationMode": "Import"
-                }
-              }
-            ]
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "databaseName": {
+        "type": "string",
+        "defaultValue": "defaultDatabase001"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
+    },
+    "tier": {
+        "type": "string"
+    },
+    "skuName": {
+        "type": "string"
+    }
+  },
+  "variables": {
+    "sqlServerName": "[concat('sqlserver', resourceGroup().name)]",
+    "databaseName": "[parameters('databaseName')]",
+    "databaseCollation": "SQL_Latin1_General_CP1_CI_AS",
+    "deployPackageFileName": "AdventureWorksLT-2019-6-28-15-54.bacpac",
+    "maxSizeBytes": "268435456000"
+  },
+  "resources": [
+    {
+      "name": "[variables('sqlServerName')]",
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2014-04-01-preview",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "SqlServer"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sqlAdministratorLogin')]",
+        "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
+        "version": "12.0"
+      },
+      "resources": [
+        {
+          "name": "[variables('databaseName')]",
+          "type": "databases",
+          "apiVersion": "2017-10-01-preview",
+          "location": "[parameters('location')]",
+          "tags": {
+            "displayName": "[variables('databaseName')]"
           },
-          {
-            "name": "AllowAllMicrosoftAzureIps",
-            "type": "firewallrules",
-            "apiVersion": "2014-04-01",
-            "location": "[parameters('location')]",
-            "properties": {
-              "endIpAddress": "255.255.255.255",
-              "startIpAddress": "0.0.0.0"
-            },
-            "dependsOn": [
-              "[variables('sqlServerName')]"
-            ]
-          }
-        ]
-      }
-    ],
-    "outputs": {
-      "sqlServerFqdn": {
-        "type": "string",
-        "value": "[reference(concat('Microsoft.Sql/servers/', variables('sqlServerName'))).fullyQualifiedDomainName]"
-      },
-      "databaseName": {
-        "type": "string",
-        "value": "[variables('databaseName')]"
-      },
-      "DatabaseConnectionString": {
-        "type": "string",
-        "value": "[concat('Server=tcp:',reference(variables('sqlserverName')).fullyQualifiedDomainName,',1433;Initial Catalog=',variables('databaseName'),';Persist Security Info=False;User ID=',reference(variables('sqlserverName')).administratorLogin,';Password=',parameters('sqlAdministratorLoginPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
-      }
+          "properties": {
+            "collation": "[variables('databaseCollation')]",
+            "maxSizeBytes": "[variables('maxSizeBytes')]"
+          },
+          "sku": {
+            "name": "[parameters('skuName')]",
+            "tier": "[parameters('tier')]"
+          },
+          "dependsOn": [
+            "[variables('sqlServerName')]"
+          ],
+          "resources": [
+            {
+              "name": "Import",
+              "type": "extensions",
+              "apiVersion": "2014-04-01-preview",
+              "dependsOn":
+              [
+                "[variables('sqlServerName')]",
+                "[variables('databaseName')]"
+              ],
+              "properties":
+              {
+                "storageKeyType": "SharedAccessKey",
+                "storageKey": "[parameters('_artifactsLocationSasToken')]",
+                "storageUri": "[concat('https://hw06startupfolder.blob.core.windows.net/hw06/',variables('deployPackageFileName'))]",
+                "administratorLogin": "[parameters('sqlAdministratorLogin')]",
+                "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
+                "operationMode": "Import"
+              }
+            }
+          ]
+        },
+        {
+          "name": "AllowAllMicrosoftAzureIps",
+          "type": "firewallrules",
+          "apiVersion": "2014-04-01",
+          "location": "[parameters('location')]",
+          "properties": {
+            "endIpAddress": "255.255.255.255",
+            "startIpAddress": "0.0.0.0"
+          },
+          "dependsOn": [
+            "[variables('sqlServerName')]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "sqlServerFqdn": {
+      "type": "string",
+      "value": "[reference(concat('Microsoft.Sql/servers/', variables('sqlServerName'))).fullyQualifiedDomainName]"
+    },
+    "databaseName": {
+      "type": "string",
+      "value": "[variables('databaseName')]"
+    },
+    "DatabaseConnectionString": {
+      "type": "string",
+      "value": "[concat('Server=tcp:',reference(variables('sqlserverName')).fullyQualifiedDomainName,',1433;Initial Catalog=',variables('databaseName'),';Persist Security Info=False;User ID=',reference(variables('sqlserverName')).administratorLogin,';Password=',parameters('sqlAdministratorLoginPassword'),';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;')]"
     }
   }
+}
