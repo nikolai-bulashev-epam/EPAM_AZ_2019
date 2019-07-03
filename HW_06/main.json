@@ -29,6 +29,9 @@
       },
       "sqlpassword": {
           "type": "securestring"
+      },
+      "databaseName": {
+        "type": "string"
       }
     },
     "variables": {
@@ -122,7 +125,7 @@
                   "secretName": "[variables('keyVault-settings').sql01.secretName]"
                 }
               },
-              "databaseName" : {"value": "AdventureWorks"},
+              "databaseName" : {"value": "[parameters('databaseName')]"},
               "_artifactsLocationSasToken": {"value": "[parameters('SASToken')]"}
           }
         }

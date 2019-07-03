@@ -70,7 +70,7 @@
             "apiVersion": "2015-01-01",
             "location": "[parameters('location')]",
             "tags": {
-              "displayName": "Database"
+              "displayName": "[variables('databaseName')]"
             },
             "properties": {
               "edition": "[variables('databaseEdition')]",
@@ -82,24 +82,13 @@
             ],
             "resources": [
               {
-                "comments": "Transparent Data Encryption",
-                "name": "current",
-                "type": "transparentDataEncryption",
-                "apiVersion": "2014-04-01-preview",
-                "properties": {
-                  "status": "[parameters('transparentDataEncryption')]"
-                },
-                "dependsOn": [
-                  "[variables('databaseName')]"
-                ]
-              },
-              {
                 "name": "Import",
                 "type": "extensions",
                 "apiVersion": "2014-04-01-preview",
                 "dependsOn":
                 [
-                  "[concat('Microsoft.Sql/servers/', variables('sqlServerName'), '/databases/', parameters('databaseName'))]"
+                  "[variables('sqlServerName')]",
+                  "[variables('databaseName')]"
                 ],
                 "properties":
                 {
