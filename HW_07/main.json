@@ -1,155 +1,95 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "uniqueDnsName": {
-        "type": "string",
-        "metadata": {
-          "description": "Relative DNS name for the traffic manager profile, resulting FQDN will be <uniqueDnsName>.trafficmanager.net, must be globally unique."
-        }
-      },
-      "uniqueDnsNameForWebApp": {
-        "type": "string",
-        "metadata": {
-          "description": "Relative DNS name for the WebApps, must be globally unique.  An index will be appended for each Web App."
-        }
-      },
-      "SAName": {
-        "type": "string"
-      },
-      "SASToken": {
-        "type": "string"
-      },
-      "RGName": {
-        "type": "string"
-      },
-      "anotherlocation": {
-          "type": "string",
-          "defaultValue": "easteurope"
-      },
-      "sqlpassword": {
-          "type": "securestring"
-      },
-      "databaseName": {
-        "type": "string"
-      },
-      "VaultObjID": {
-        "type": "string"
-      }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "SAName": {
+      "type": "string"
     },
-    "variables": {
-        "webAppLocations": [ "[resourceGroup().location]", "[parameters('anotherlocation')]" ],
-        "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',parameters('RGName'),'/')]",
-        "keyVault-settings": {
-          "name": "[concat(parameters('RGName'),'vault')]",
-          "sql01": {
-            "secret": "[parameters('sqlpassword')]",
-            "secretName": "sql01password"
-          },
-          "kvids" : "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('RGName'), '/providers/Microsoft.KeyVault/vaults/', concat(parameters('RGName'),'vault'))]"
-        }
+    "SASToken": {
+      "type": "string"
     },
-    "resources": [
-      {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2018-05-01",
-        "name": "wapp",
-        "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-            "uri": "[concat(variables('templateBaseUrl'), 'appservice.json', parameters('SASToken'))]",
-            "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-                "uniqueDnsNameForWebApp" : {"value": "[parameters('uniqueDnsNameForWebApp')]"},
-                "uniqueDnsName" : {"value": "[parameters('uniqueDnsName')]"},
-                "webAppLocations": {"value": "[variables('webAppLocations')]"},
-                "DatabaseConnectionString": {"value": "[reference('ssde').outputs.DatabaseConnectionString.value]"},
-                "repoURL": {"value": "https://github.com/nikolai-bulashev-epam/az_web_app.git"}
-            }
-        }
-      },
-      {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2018-05-01",
-        "name": "tmanager",
-        "properties": {
-            "mode": "Incremental",
-            "templateLink": {
-            "uri": "[concat(variables('templateBaseUrl'), 'trafficmanager.json', parameters('SASToken'))]",
-            "contentVersion": "1.0.0.0"
-            },
-            "parameters": {
-                "TMPreffix": {"value": "[parameters('RGName')]"},
-                "TRMethod": {"value": "Performance"},
-                "uniqueDnsNameForWebApp" : {"value": "[reference('wapp').outputs.uniqueDnsNameForWebApp.value]"},
-                "uniqueDnsName" : {"value": "[reference('wapp').outputs.uniqueDnsName.value]"},
-                "webAppLocations": {"value": "[variables('webAppLocations')]"}
-            }
-        }
-      },
-      {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2018-05-01",
-        "name": "kv",
-        "properties": {
-          "mode": "Incremental",
-          "templateLink": {
-            "uri": "[concat(variables('templateBaseUrl'), 'KVault.json', parameters('SASToken'))]",
-            "contentVersion": "1.0.0.0"
-          },
-          "parameters": {
-            "keyVaultName": {"value": "[variables('keyVault-settings').name]"},
-            "objectId": {"value": "[parameters('VaultObjID')]"},
-            "keysPermissions": {"value": ["all"]},
-            "secretsPermissions": {"value": ["all"]},
-            "secretName": {"value": "[variables('keyVault-settings').sql01.secretName]"},
-            "secretValue": {"value": "[variables('keyVault-settings').sql01.secret]"}
-          }
-        }
-      },
-      {
-        "type": "Microsoft.Resources/deployments",
-        "apiVersion": "2018-05-01",
-        "name": "ssde",
-        "properties": {
-          "mode": "Incremental",
-          "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'sqlserver.json', parameters('SASToken'))]",
-          "contentVersion": "1.0.0.0"
-          },
-          "parameters": {
-              "sqlAdministratorLogin": {"value": "sqladmin"},
-              "sqlAdministratorLoginPassword": {
-                "reference": {
-                  "keyVault": {
-                      "id": "[reference('kv').outputs.KVUri.value]"
-                  },
-                  "secretName": "[variables('keyVault-settings').sql01.secretName]"
-                }
-              },
-              "databaseName" : {"value": "[parameters('databaseName')]"},
-              "_artifactsLocationSasToken": {"value": "[parameters('SASToken')]"}
-          }
-        }
-      }
-    ],
-    "outputs": {
-      "trafficManagerFqdn" : {
-        "type" : "string",
-        "value": "[reference('tmanager').outputs.trafficManagerFqdn.value]"
-      },
-      "trafficManagerEndpoints" : {
-        "type" : "array",
-        "value": "[reference('tmanager').outputs.trafficManagerEndpoints.value]"
-      },
-      "sqlConnectionString" : {
-        "type" : "securestring",
-        "value": "[reference('ssde').outputs.DatabaseConnectionString.value]"
-      },
-      "sqlServerFqdn": {
-        "type": "string",
-        "value": "[reference('ssde').outputs.sqlServerFqdn.value]"
+    "RGName": {
+      "type": "string"
+    },
+    "VaultID": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',parameters('RGName'),'/')]",
+    "keyVault-settings": {
+      "id": "[parameters('VaultID')]",
+      "vm01": {
+        "secretName": "vm01password"
       }
     }
+
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "vmnet",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'),'VMnet.json', parameters('SASToken'))]",
+          "contentVersion":"1.0.0.0"
+        },
+        "parametersLink": {
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json', parameters('SASToken'))]",
+            "contentVersion":"1.0.0.0"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "VM01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json', parameters('SASToken'))]",
+          "contentVersion": "1.0.0.1"
+        },
+        "parameters": {
+          "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
+          "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
+          "adminPassword": { 
+            "reference": {
+              "keyVault": {
+                "id": "[variables('keyVault-settings').id]"
+              },
+              "secretName": "[variables('keyVault-settings').vm01.secretName]"
+            }
+          },
+          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine01')]"}
+        }
+      },
+      "dependsOn": [
+        "vmnet"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "name": "RS",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'), 'Rservice.json', parameters('SASToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "vaultName" : { "value": "HW07RserviceVault1" },
+          "vmname": {"value": "[concat(resourceGroup().Name,'SimpleWinVM')]"}
+        }
+      },
+      "dependsOn": [
+        "vmnet"
+      ]
+    }
+  ],
+  "outputs": {
   }
+}

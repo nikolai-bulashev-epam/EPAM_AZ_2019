@@ -1,0 +1,83 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "schedule": {
+            "value": {
+                "scheduleRunFrequency": "Daily",
+                "scheduleRunDays": null,
+                "scheduleRunTimes": [
+                    "2019-07-04T08:30:00.000Z"
+                ],
+                "schedulePolicyType": "SimpleSchedulePolicy"
+            }
+        },
+        "retention": {
+            "value": {
+                "dailySchedule": {
+                    "retentionTimes": [
+                        "2019-07-04T08:30:00.000Z"
+                    ],
+                    "retentionDuration": {
+                        "count": 90,
+                        "durationType": "Days"
+                    }
+                },
+                "weeklySchedule": {
+                    "daysOfTheWeek": [
+                        "Sunday"
+                    ],
+                    "retentionTimes": [
+                        "2019-07-04T08:30:00.000Z"
+                    ],
+                    "retentionDuration": {
+                        "count": 12,
+                        "durationType": "Weeks"
+                    }
+                },
+                "monthlySchedule": {
+                    "retentionScheduleFormatType": "Weekly",
+                    "retentionScheduleDaily": null,
+                    "retentionScheduleWeekly": {
+                        "daysOfTheWeek": [
+                            "Sunday"
+                        ],
+                        "weeksOfTheMonth": [
+                            "First"
+                        ]
+                    },
+                    "retentionTimes": [
+                        "2019-07-04T08:30:00.000Z"
+                    ],
+                    "retentionDuration": {
+                        "count": 60,
+                        "durationType": "Months"
+                    }
+                },
+                "yearlySchedule": {
+                    "retentionScheduleFormatType": "Weekly",
+                    "monthsOfYear": [
+                        "January"
+                    ],
+                    "retentionScheduleDaily": null,
+                    "retentionScheduleWeekly": {
+                        "daysOfTheWeek": [
+                            "Sunday"
+                        ],
+                        "weeksOfTheMonth": [
+                            "First"
+                        ]
+                    },
+                    "retentionTimes": [
+                        "2019-07-04T08:30:00.000Z"
+                    ],
+                    "retentionDuration": {
+                        "count": 10,
+                        "durationType": "Years"
+                    }
+                },
+                "retentionPolicyType": "LongTermRetentionPolicy"
+            }
+        }
+    }
+}
