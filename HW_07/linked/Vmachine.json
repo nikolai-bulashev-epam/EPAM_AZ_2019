@@ -56,7 +56,7 @@
       "publicIPAddressName": "[concat(variables('vmName'), 'myPublicIP')]",
       "vmName": "[concat(resourceGroup().Name,'SimpleWinVM')]",
       "virtualNetworkName": "[parameters('VNetSettings').vnetName]",
-      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+      "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]"
     },
     "resources": [
       {
