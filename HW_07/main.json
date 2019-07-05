@@ -13,6 +13,10 @@
     },
     "VaultID": {
       "type": "string"
+    },
+    "RSVaultName": {
+      "type": "string",
+      "defaultValue": "HW07RserviceVault3"
     }
   },
   "variables": {
@@ -37,7 +41,7 @@
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json', parameters('SASToken'))]",
+            "uri":"[concat(variables('templateBaseUrl'),'parameters.json', parameters('SASToken'))]",
             "contentVersion":"1.0.0.0"
         }
       }
@@ -81,15 +85,27 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "vaultName" : { "value": "HW07RserviceVault1" },
+          "vaultName" : { "value": "[parameters('RSVaultName')]" },
           "vmname": {"value": "[concat(resourceGroup().Name,'SimpleWinVM')]"}
         }
       },
       "dependsOn": [
-        "vmnet"
+        "VM01"
       ]
     }
   ],
   "outputs": {
+    "saname": {
+      "type": "string",
+      "value": "[reference('VM01').outputs.saname.value]"
+    },
+    "vmname": {
+      "type": "string",
+      "value": "[reference('VM01').outputs.vmname.value]"
+    },
+    "RSVaultName": {
+      "type": "string",
+      "value": "[parameters('RSVaultName')]"
+    }
   }
 }
