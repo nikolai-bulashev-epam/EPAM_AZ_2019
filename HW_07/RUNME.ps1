@@ -50,7 +50,7 @@ $vault = Get-AzRecoveryServicesVault -Name $lastDeployment.Outputs['RSVaultName'
 if ($vault) {
     Set-AzRecoveryServicesVaultContext -Vault $vault
     
-    $backupcontainer = Get-AzRecoveryServicesBackupContainer -ContainerType "AzureVM" -FriendlyName $lastDeployment.Outputs['vmname']
+    $backupcontainer = Get-AzRecoveryServicesBackupContainer -ContainerType "AzureVM" -FriendlyName $lastDeployment.Outputs['vmname'].value
     $item = Get-AzRecoveryServicesBackupItem -Container $backupcontainer -WorkloadType "AzureVM"
     $statusTable = Get-AzRecoveryservicesBackupJob
     if (@($statusTable | Where-Object {$_.Status -eq "InProgress"}).Count) {
