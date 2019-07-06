@@ -16,7 +16,7 @@
     },
     "RSVaultName": {
       "type": "string",
-      "defaultValue": "HW07RserviceVault3"
+      "defaultValue": "HW07RserviceVault4"
     }
   },
   "variables": {
@@ -41,7 +41,7 @@
           "contentVersion":"1.0.0.0"
         },
         "parametersLink": {
-            "uri":"[concat(variables('templateBaseUrl'),'parameters.json', parameters('SASToken'))]",
+            "uri":"[concat(variables('templateBaseUrl'),'Parameters.json', parameters('SASToken'))]",
             "contentVersion":"1.0.0.0"
         }
       }
