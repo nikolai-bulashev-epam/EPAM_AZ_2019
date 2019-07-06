@@ -46,7 +46,7 @@ New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.jso
 $lastDeployment = Get-AzResourceGroupDeployment -ResourceGroupName $RGName | Sort Timestamp -Descending | Select -First 1
 
 Set-Item Env:\SuppressAzurePowerShellBreakingChangeWarnings "true"
-$vault = Get-AzRecoveryServicesVault -Name $lastDeployment.Outputs['RSVaultName']
+$vault = Get-AzRecoveryServicesVault -Name $lastDeployment.Outputs['RSVaultName'].value
 if ($vault) {
     Set-AzRecoveryServicesVaultContext -Vault $vault
     
@@ -75,14 +75,14 @@ if ($vault) {
     exit 1
 }
 Write-Host "Lets recover VM disks"
-$namedContainer = Get-AzRecoveryServicesBackupContainer  -ContainerType "AzureVM" -Status "Registered" -FriendlyName $lastDeployment.Outputs['vmname']
+$namedContainer = Get-AzRecoveryServicesBackupContainer  -ContainerType "AzureVM" -Status "Registered" -FriendlyName $lastDeployment.Outputs['vmname'].value
 $backupitem = Get-AzRecoveryServicesBackupItem -Container $namedContainer -WorkloadType "AzureVM"
 if ($backupitem) {
     Write-Host "Some recovery points found"
     $startDate = (Get-Date).AddDays(-7)
     $endDate = Get-Date
     $rp = Get-AzRecoveryServicesBackupRecoveryPoint -Item $backupitem -StartDate $startdate.ToUniversalTime() -EndDate $enddate.ToUniversalTime()
-    $restorejob = Restore-AzRecoveryServicesBackupItem -RecoveryPoint $rp[0] -StorageAccountName $lastDeployment.Outputs['saname'] -StorageAccountResourceGroupName $RGName
+    $restorejob = Restore-AzRecoveryServicesBackupItem -RecoveryPoint $rp[0] -StorageAccountName $lastDeployment.Outputs['saname'].value -StorageAccountResourceGroupName $RGName
     Wait-AzRecoveryServicesBackupJob -Job $restorejob -Timeout 43200
     Write-Host "restoring disks finished"
     Write-Host "Starting VM recover"
