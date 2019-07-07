@@ -16,7 +16,7 @@
     },
     "RSVaultName": {
       "type": "string",
-      "defaultValue": "HW07RserviceVault4"
+      "defaultValue": "HW07RserviceVault9"
     }
   },
   "variables": {
