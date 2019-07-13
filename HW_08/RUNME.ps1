@@ -1,8 +1,8 @@
-$RGName = 'hw08'
+$RGName = 'hw0008'
 $location = 'westeurope'
 $SAName = $RGName+'startupfolder'
 $blobContainerName = $RGName
-$sshRSAPublicKey = Get-Content '..\..\DemoKey\demo.pub' | select -First 1 | ConvertTo-SecureString -AsPlainText -Force
+$sshRSAPublicKey = Get-Content '.\linked\demo.pub' | select -First 1 | ConvertTo-SecureString -AsPlainText -Force
 
 function Start-Sleep($seconds) {
     $doneDT = (Get-Date).AddSeconds($seconds)
@@ -20,6 +20,18 @@ Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction Silentl
 if ($notPresent) {
     New-AzResourceGroup -Name $RGName -Location $location
 }
+
+$vault = Get-AzKeyVault -VaultName "$RGName-vault"
+if (-Not $vault) {
+    $vault = New-AzKeyVault -Name "$RGName-vault" -ResourceGroupName $RGName -Location $location -EnabledForDeployment -EnabledForTemplateDeployment
+    $subscriptionUsers = Get-AzADUser
+    foreach ($user in $subscriptionUsers) {
+        Set-AzKeyVaultAccessPolicy -VaultName "$RGName-vault" -ObjectId $user.id -PermissionsToSecrets Get,List,Set
+    }
+    $kaspassword = Read-Host "Enter principalAppPassword" -AsSecureString
+    Set-AzKeyVaultSecret -VaultName "$RGName-vault" -Name 'kaspassword' -SecretValue $kaspassword
+}
+$kaspassword = (Get-AzKeyVaultSecret -vaultName "$RGName-vault" -name "kaspassword").SecretValueText | ConvertTo-SecureString -AsPlainText -Force
 
 $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresentBucket -ErrorAction SilentlyContinue
 if (-Not $storageAcct) {
@@ -44,14 +56,14 @@ foreach($file in $files)
 $fc = $files.count
 Write-Host "Startup folder is charged by $fc files" -ForegroundColor Green
 
-if (Get-AzADApplication -DisplayName $RGName"KuberCluster") {
-    Remove-AzADApplication -DisplayName $RGName"KuberCluster"
+if (-not (Get-AzADApplication -DisplayName $RGName"KuberCluster")) {
+    $app = New-AzADApplication -DisplayName $RGName"KuberCluster" -IdentifierUris $RGName"KuberCluster" -Password $kaspassword
+    New-AzADServicePrincipal -ApplicationId $app.ApplicationId 
+    start-sleep 15
+    New-AzRoleAssignment -RoleDefinitionName Contributor -ApplicationId $app.ApplicationId
+    start-sleep 15
 }
 
-$kaspassword = Read-Host "Enter principalAppPassword" -AsSecureString
-$app = New-AzADApplication -DisplayName $RGName"KuberCluster" -IdentifierUris $RGName"KuberCluster" -Password $pppassword
-New-AzADServicePrincipal -ApplicationId $app.ApplicationId 
-start-sleep 15
-New-AzRoleAssignment -RoleDefinitionName Contributor -ApplicationId $app.ApplicationId
-start-sleep 15
 New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -sshRSAPublicKey $sshRSAPublicKey -servicePrincipalClientId $app.ApplicationId -kaspassword $kaspassword
+$lastDeployment = Get-AzResourceGroupDeployment -ResourceGroupName $RGName | Sort Timestamp -Descending | Select -First 1
+#kubectl create secret docker-registry acr-auth --docker-server "hw0008acr.azurecr.io" --docker-username "68725ee7-c309-4997-a769-fccac2500b1d" --docker-password "Ajrcnhjn808!" --docker-email "salvador@list.ru"
