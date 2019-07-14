@@ -136,6 +136,10 @@
         "controlPlaneFQDN": {
             "type": "string",
             "value": "[reference(parameters('clusterName')).fqdn]"
+        },
+        "AKSName": {
+            "type": "string",
+            "value": "[parameters('clusterName')]"
         }
     }
 }

@@ -66,4 +66,5 @@ if (-not (Get-AzADApplication -DisplayName $RGName"KuberCluster")) {
 
 New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -sshRSAPublicKey $sshRSAPublicKey -servicePrincipalClientId $app.ApplicationId -kaspassword $kaspassword
 $lastDeployment = Get-AzResourceGroupDeployment -ResourceGroupName $RGName | Sort Timestamp -Descending | Select -First 1
-#kubectl create secret docker-registry acr-auth --docker-server "hw0008acr.azurecr.io" --docker-username "68725ee7-c309-4997-a769-fccac2500b1d" --docker-password "Ajrcnhjn808!" --docker-email "salvador@list.ru"
+write-host "please run from console: az aks get-credentials  --resource-group  $RGname --name '$($lastDeployment.Outputs['aksName'].Value)'"
+write-host "please run from console: kubectl create secret docker-registry acr-auth --docker-server '$($lastDeployment.Outputs['acrLoginServer'].Value)' --docker-username '$($app.ApplicationId)' --docker-password '$((Get-AzKeyVaultSecret -vaultName $RGName'-vault' -name 'kaspassword').SecretValueText)' --docker-email 'salvador@list.ru'"

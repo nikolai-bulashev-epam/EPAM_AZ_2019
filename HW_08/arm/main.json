@@ -67,6 +67,10 @@
       "controlPlaneFQDN": {
         "type": "string",
         "value": "[reference('AKS').outputs.controlPlaneFQDN.value]"
+      },
+      "AKSName": {
+        "type": "string",
+        "value": "[reference('AKS').outputs.AKSName.value]"
       }
     }
   }
