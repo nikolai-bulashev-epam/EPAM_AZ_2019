@@ -28,10 +28,13 @@ if (-Not $vault) {
     foreach ($user in $subscriptionUsers) {
         Set-AzKeyVaultAccessPolicy -VaultName "$RGName-vault" -ObjectId $user.id -PermissionsToSecrets Get,List,Set
     }
-    $kaspassword = Read-Host "Enter principalAppPassword" -AsSecureString
-    Set-AzKeyVaultSecret -VaultName "$RGName-vault" -Name 'kaspassword' -SecretValue $kaspassword
+    if (Get-AzKeyVaultSecret -vaultName "$RGName-vault" -name "kaspassword") {
+        $kaspassword = (Get-AzKeyVaultSecret -vaultName "$RGName-vault" -name "kaspassword").SecretValueText | ConvertTo-SecureString -AsPlainText -Force
+    } else {
+        $kaspassword = Read-Host "Enter principalAppPassword" -AsSecureString
+        Set-AzKeyVaultSecret -VaultName "$RGName-vault" -Name 'kaspassword' -SecretValue $kaspassword
+    }
 }
-$kaspassword = (Get-AzKeyVaultSecret -vaultName "$RGName-vault" -name "kaspassword").SecretValueText | ConvertTo-SecureString -AsPlainText -Force
 
 $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresentBucket -ErrorAction SilentlyContinue
 if (-Not $storageAcct) {
@@ -66,11 +69,12 @@ if (-not (Get-AzADApplication -DisplayName $RGName"KuberCluster")) {
     $app = Get-AzADApplication -DisplayName $RGName"KuberCluster"
 }
 
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -sshRSAPublicKey $sshRSAPublicKey -servicePrincipalClientId $app.ApplicationId -kaspassword $kaspassword
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile '.\arm\Main.json' -SASToken $token -RGName $RGName -SAName $SAName -sshRSAPublicKey $sshRSAPublicKey -servicePrincipalClientId $app.ApplicationId -kaspassword $kaspassword
 $lastDeployment = Get-AzResourceGroupDeployment -ResourceGroupName $RGName | Sort Timestamp -Descending | Select -First 1
 $env:AKR_HOST = $lastDeployment.Outputs['acrLoginServer'].Value
 $env:AKR_USERNAME = $app.ApplicationId
 $env:AKR_PASSWORD = (Get-AzKeyVaultSecret -vaultName $RGName'-vault' -name 'kaspassword').SecretValueText
-write-host "please run from console: az aks get-credentials  --resource-group  $RGname --name '$($lastDeployment.Outputs['aksName'].Value)'"
-write-host "please run from console: kubectl create secret docker-registry acr-auth --docker-server '$($env:AKR_HOST)' \
- --docker-username '$($env:AKR_USERNAME)' --docker-password '$($env:AKR_PASSWORD)' --docker-email 'salvador@list.ru'"
+$env:RG_NAME = $RGName
+$env:AKS_CLUSTERNAME = $lastDeployment.Outputs['aksName'].Value
+write-host "please run from console: az aks get-credentials  --resource-group  $($RGname) --name '$($env:AKS_CLUSTERNAME)'"
+write-host "please run from console: kubectl create secret docker-registry acr-auth --docker-server '$($env:AKR_HOST)' --docker-username '$($env:AKR_USERNAME)' --docker-password '$($env:AKR_PASSWORD)' --docker-email 'salvador@list.ru'"
