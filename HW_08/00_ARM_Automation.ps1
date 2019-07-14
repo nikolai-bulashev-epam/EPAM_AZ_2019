@@ -2,7 +2,7 @@ $RGName = 'hw0008'
 $location = 'westeurope'
 $SAName = $RGName+'startupfolder'
 $blobContainerName = $RGName
-$sshRSAPublicKey = Get-Content '.\linked\demo.pub' | select -First 1 | ConvertTo-SecureString -AsPlainText -Force
+$sshRSAPublicKey = Get-Content '.\arm\linked\demo.pub' | select -First 1 | ConvertTo-SecureString -AsPlainText -Force
 
 function Start-Sleep($seconds) {
     $doneDT = (Get-Date).AddSeconds($seconds)
@@ -62,9 +62,15 @@ if (-not (Get-AzADApplication -DisplayName $RGName"KuberCluster")) {
     start-sleep 15
     New-AzRoleAssignment -RoleDefinitionName Contributor -ApplicationId $app.ApplicationId
     start-sleep 15
+} else {
+    $app = Get-AzADApplication -DisplayName $RGName"KuberCluster"
 }
 
 New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SASToken $token -RGName $RGName -SAName $SAName -sshRSAPublicKey $sshRSAPublicKey -servicePrincipalClientId $app.ApplicationId -kaspassword $kaspassword
 $lastDeployment = Get-AzResourceGroupDeployment -ResourceGroupName $RGName | Sort Timestamp -Descending | Select -First 1
+$env:AKR_HOST = $lastDeployment.Outputs['acrLoginServer'].Value
+$env:AKR_USERNAME = $app.ApplicationId
+$env:AKR_PASSWORD = (Get-AzKeyVaultSecret -vaultName $RGName'-vault' -name 'kaspassword').SecretValueText
 write-host "please run from console: az aks get-credentials  --resource-group  $RGname --name '$($lastDeployment.Outputs['aksName'].Value)'"
-write-host "please run from console: kubectl create secret docker-registry acr-auth --docker-server '$($lastDeployment.Outputs['acrLoginServer'].Value)' --docker-username '$($app.ApplicationId)' --docker-password '$((Get-AzKeyVaultSecret -vaultName $RGName'-vault' -name 'kaspassword').SecretValueText)' --docker-email 'salvador@list.ru'"
+write-host "please run from console: kubectl create secret docker-registry acr-auth --docker-server '$($env:AKR_HOST)' \
+ --docker-username '$($env:AKR_USERNAME)' --docker-password '$($env:AKR_PASSWORD)' --docker-email 'salvador@list.ru'"
