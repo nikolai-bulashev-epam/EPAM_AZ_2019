@@ -42,10 +42,36 @@
               "servicePrincipalClientSecret": {"value": "[parameters('kaspassword')]"}
           }
         }
+      },
+      {
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2018-05-01",
+        "name": "AKR",
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": {
+            "uri": "[concat(variables('templateBaseUrl'),'AKR.json', parameters('SASToken'))]",
+            "contentVersion":"1.0.0.0"
+          },
+          "parameters": {
+             "acrName": {"value": "[concat(resourceGroup().name,'ACR')]"}
+          }
+        }
       }
     ],
     "outputs": {
-     
+      "acrLoginServer": {
+        "type": "string",
+        "value": "[reference('AKR').outputs.acrLoginServer.value]"
+      },
+      "controlPlaneFQDN": {
+        "type": "string",
+        "value": "[reference('AKS').outputs.controlPlaneFQDN.value]"
+      },
+      "AKSName": {
+        "type": "string",
+        "value": "[reference('AKS').outputs.AKSName.value]"
+      }
     }
   }
   
