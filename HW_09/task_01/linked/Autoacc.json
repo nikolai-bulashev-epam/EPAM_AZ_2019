@@ -35,6 +35,9 @@
         },
         "scriptUri": {
             "type": "string"
+        },
+        "tenantid": {
+          "type": "string"
         }
     },
     "variables": {
@@ -47,7 +50,7 @@
       {
         "name": "[parameters('accountName')]",
         "type": "Microsoft.Automation/automationAccounts",
-        "apiVersion": "2015-01-01-preview",
+        "apiVersion": "2015-10-31",
         "location": "[resourceGroup().location]",
         "dependsOn": [ ],
         "tags": { },
@@ -60,7 +63,7 @@
           {
             "name": "[variables('runbookName')]",
             "type": "runbooks",
-            "apiVersion": "2015-01-01-preview",
+            "apiVersion": "2018-06-30",
             "location": "[resourceGroup().location]",
             "dependsOn": [
               "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]"
@@ -94,11 +97,14 @@
           {
             "name": "[parameters('jobId')]",
             "type": "jobs",
-            "apiVersion": "2015-01-01-preview",
+            "apiVersion": "2017-05-15-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [
               "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
-              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/runbooks/',variables('runbookName'))]"
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/runbooks/',variables('runbookName'))]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/variables/SubscriptionId')]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/variables/TenantID')]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/variables/CredentialName')]"
             ],
             "tags": {
               "key": "value"
@@ -108,6 +114,42 @@
                 "name": "[variables('runbookName')]"
               }
             }
+          },
+          {
+            "name": "SubscriptionId",
+            "type": "variables",
+            "apiVersion": "2015-10-31",
+            "properties": {
+              "value": "[concat('\"', subscription().subscriptionId, '\"')]"
+            },
+            "dependsOn": [
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/runbooks/',variables('runbookName'))]"
+            ]
+          },
+          {
+            "name": "TenantID",
+            "type": "variables",
+            "apiVersion": "2015-10-31",
+            "properties": {
+              "value": "[concat('\"', parameters('tenantid'), '\"')]"
+            },
+            "dependsOn": [
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/runbooks/',variables('runbookName'))]"
+            ]
+          },
+          {
+            "name": "CredentialName",
+            "type": "variables",
+            "apiVersion": "2015-10-31",
+            "properties": {
+              "value": "[concat('\"', parameters('credentialName'), '\"')]"
+            },
+            "dependsOn": [
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/runbooks/',variables('runbookName'))]"
+            ]
           }
         ]
       }

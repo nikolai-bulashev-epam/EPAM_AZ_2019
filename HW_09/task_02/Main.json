@@ -12,8 +12,16 @@
       "type": "string"
     },
     "VMpassword": {
-      "type": "securestring",
-      "defaultValue": "l8}U?N[X3me3"
+      "type": "securestring"
+    },
+    "jobid": {
+      "type": "string"
+    }, 
+    "tenantid": {
+      "type": "string"
+    },
+    "appid": {
+      "type": "string"
     }
   },
   "variables": {
@@ -80,38 +88,6 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
-      "name": "VM01",
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json', parameters('SASToken'))]",
-          "contentVersion": "1.0.0.1"
-        },
-        "parameters": {
-          "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
-          "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
-          "adminPassword": { 
-            "reference": {
-                            "keyVault": {
-                                "id": "[reference('kv').outputs.KVUri.value]"
-                            },
-                            "secretName": "[variables('keyVault-settings').vm01.secretName]"
-                        }
-          },
-          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine01')]"},
-          "ModulesUrl": {"value": "[concat(variables('templateBaseUrl'), 'iis.zip', parameters('SASToken'))]"},
-          "IndexFileUrl": {"value": "[concat(variables('templateBaseUrl'), 'iisstart.html', parameters('SASToken'))]"},
-          "ConfigurationFunction": {"value": "iis.ps1\\ContosoWebsite"}
-        }
-      },
-      "dependsOn": [
-        "kv",
-        "vmnet"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2018-05-01",
       "name": "VM02",
       "properties": {
         "mode": "Incremental",
@@ -131,7 +107,7 @@
                             "secretName": "[variables('keyVault-settings').vm01.secretName]"
                         }
           },
-          "dnsLabelPrefix": {"value": "[concat(parameters('RGName'),'-machine02')]"},
+          "dnsLabelPrefix": {"value": "lin02"},
           "CustomScriptURL": {"value": "[concat(variables('templateBaseUrl'), 'apache2.sh', parameters('SASToken'))]"},
           "commandToExecute": {"value": "/bin/sh apache2.sh"}
         }
@@ -153,7 +129,6 @@
         },
         "parameters": {
           "accountName": {"value": "[concat(resourcegroup().name,'autoaccount')]"},
-          "userName": {"value": "[concat(resourcegroup().name, 'autoguy')]"},
           "password": { 
             "reference": {
                             "keyVault": {
@@ -162,8 +137,12 @@
                             "secretName": "[variables('keyVault-settings').vm01.secretName]"
                         }
           },
-          "jobId": {"value": "Shutdown-ARM-VMs-Parallel"},
-          "scriptUri": {"value": "[concat(variables('templateBaseUrl'), 'Runbook.ps1', parameters('SASToken'))]"}
+          "jobId": {"value": "[parameters('jobid')]"},
+          "scriptUri": {"value": "[concat(variables('templateBaseUrl'), 'Runbook.ps1', parameters('SASToken'))]"},
+          "tenantid": {"value": "[parameters('tenantid')]"},
+          "userName": {"value": "[parameters('appid')]"},
+          "token": {"value": "[parameters('SASToken')]"},
+          "sauri": {"value": "[variables('templateBaseUrl')]"}
         }
       },
       "dependsOn": [

@@ -14,13 +14,14 @@ workflow Shutdown-ARM-VMs-Parallel
 
     #Connect to your Azure Account
 	$Account = Login-AzureRmAccount -Credential $Cred -TenantId $TenantID -ServicePrincipal 
+
     
 	$subscription = Get-AzureRmSubscription | Where-Object {$_.Id -eq $SubscriptionId} | Set-AzureRmContext
 
 	$vms = Get-AzureRmVM
 		
-	Foreach -Parallel ($vm in $vms){
-	    Write-Output "Stopping $($vm.Name)"
-	    Stop-AzureRmVm -Name $vm.Name -ResourceGroupName $vm.ResourceGroupName -Force
-	}
+	#Foreach -Parallel ($vm in $vms){
+	#    Write-Output "Stopping $($vm.Name)"
+	#    Stop-AzureRmVm -Name $vm.Name -ResourceGroupName $vm.ResourceGroupName -Force
+	#}
 }

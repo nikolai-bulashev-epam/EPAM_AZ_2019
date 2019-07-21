@@ -22,15 +22,17 @@ $password = Scramble-String $password
 Write-Host "Your password is: $password" -ForegroundColor Green
 $secureStringPswd = ConvertTo-SecureString $password -AsPlainText -Force
 
-$RGName = 'hw09'
+$RGName = 'hw092'
 $location = 'westeurope'
-$SAName = 'hw09startupfolder'
+$SAName = 'hw092startupfolder'
 $blobContainerName = $RGName
 Get-AzResourceGroup -Name $RGName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
 if ($notPresent) {
     New-AzResourceGroup -Name $RGName -Location $location
 }
+
+
 
 $storageAcct = Get-AzStorageAccount -ResourceGroupName $RGName -Name $SAName -ErrorVariable notPresentBucket -ErrorAction SilentlyContinue
 if ($notPresentBucket) {
@@ -46,6 +48,20 @@ if ($notPresentBucket) {
 Install-Module -Name xPSDesiredStateConfiguration -Scope CurrentUser
 Publish-AzVMDscConfiguration ".\dsc\iis.ps1" -OutputArchivePath ".\DSC\iis.zip" -Force
 $token = New-AzStorageContainerSASToken -Name  $blobContainerName -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context 
+$dscCompilationJobId = [System.Guid]::NewGuid().toString()
+$tenantId = Get-AzSubscription | Select-Object tenantid
+$appname = $RGName+"AppAutomation"
+if (-not (Get-AzADApplication -DisplayName $appname)) {
+    $app = New-AzADApplication -DisplayName $appname -IdentifierUris $appname -Password $secureStringPswd
+    New-AzADServicePrincipal -ApplicationId $app.ApplicationId 
+    start-sleep 15
+    New-AzRoleAssignment -RoleDefinitionName Contributor -ApplicationId $app.ApplicationId
+    start-sleep 15
+} else {
+    $app = Get-AzADApplication -DisplayName $appname
+    Remove-AzADAppCredential -ApplicationId $app.ApplicationId -Force
+    New-AzADAppCredential -ApplicationId $app.ApplicationId -Password $secureStringPswd -EndDate (Get-Date).AddDays(30)
+}
 
 $localFileDirectory = '.\'
 $files = Get-ChildItem -Path $localFileDirectory -File -Recurse
@@ -54,4 +70,4 @@ foreach($file in $files)
     Write-Host $file
     set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SAName $SAName -RGName $RGName -Mode Incremental -Verbose -SASToken $token -VMpassword $secureStringPswd
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SAName $SAName -RGName $RGName -Mode Incremental -Verbose -SASToken $token -VMpassword $secureStringPswd -jobid $dscCompilationJobId -tenantid $tenantId.TenantId -appid $app.ApplicationId.Guid
