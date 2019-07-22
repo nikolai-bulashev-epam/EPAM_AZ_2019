@@ -48,8 +48,9 @@ if ($notPresentBucket) {
 Install-Module -Name xPSDesiredStateConfiguration -Scope CurrentUser
 Publish-AzVMDscConfiguration ".\dsc\iis.ps1" -OutputArchivePath ".\DSC\iis.zip" -Force
 $token = New-AzStorageContainerSASToken -Name  $blobContainerName -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context 
-$dscCompilationJobId = [System.Guid]::NewGuid().toString()
 $tenantId = Get-AzSubscription | Select-Object tenantid
+$UTCNow = (Get-Date).ToUniversalTime()
+$UTCTimeTick = $UTCNow.Ticks.tostring()
 $appname = $RGName+"AppAutomation"
 if (-not (Get-AzADApplication -DisplayName $appname)) {
     $app = New-AzADApplication -DisplayName $appname -IdentifierUris $appname -Password $secureStringPswd
@@ -70,4 +71,11 @@ foreach($file in $files)
     Write-Host $file
     set-AzStorageblobcontent  -File $file.FullName -Force -Container $blobContainerName -blob $file -Context $storageAcct.Context 
 }
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -SAName $SAName -RGName $RGName -Mode Incremental -Verbose -SASToken $token -VMpassword $secureStringPswd -jobid $dscCompilationJobId -tenantid $tenantId.TenantId -appid $app.ApplicationId.Guid
+$parameters = @{}
+$parameters.Add('SAName',$SAName) 
+$parameters.Add('VMpassword',$secureStringPswd)
+$parameters.Add('CurrentDateTimeInTicks',$UTCTimeTick)
+$parameters.Add('tenantid',$tenantId.TenantId)
+$parameters.Add('appid',$app.ApplicationId.Guid)
+
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -TemplateParameterObject $parameters -SAStoken $token

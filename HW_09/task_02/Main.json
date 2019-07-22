@@ -8,15 +8,17 @@
     "SASToken": {
       "type": "string"
     },
-    "RGName": {
-      "type": "string"
-    },
     "VMpassword": {
       "type": "securestring"
     },
-    "jobid": {
-      "type": "string"
-    }, 
+    "CurrentDateTimeInTicks": {
+      "type": "string",
+      "minLength": 18,
+      "maxLength": 18,
+      "metadata": {
+        "description": "the current datetime in ticks. this is used to generate a unique string for every deployment"
+      }
+    },
     "tenantid": {
       "type": "string"
     },
@@ -25,14 +27,14 @@
     }
   },
   "variables": {
-    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',parameters('RGName'),'/')]",
+    "templateBaseUrl": "[concat('https://',parameters('SAName'),'.blob.core.windows.net/',resourceGroup().name,'/')]",
     "keyVault-settings": {
-      "name": "[concat(parameters('RGName'),'vault')]",
+      "name": "[concat(resourceGroup().name,'vault')]",
       "vm01": {
         "secret": "[parameters('VMpassword')]",
         "secretName": "vm01password"
       },
-      "kvids" : "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('RGName'), '/providers/Microsoft.KeyVault/vaults/', concat(parameters('RGName'),'vault'))]"
+      "kvids" : "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.KeyVault/vaults/', concat(resourceGroup().name,'vault'))]"
     }
 
   },
@@ -97,7 +99,7 @@
         },
         "parameters": {
           "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
-          "adminUsername" : {"value": "[concat('admin-', parameters('RGName'))]"},
+          "adminUsername" : {"value": "[concat('admin-', resourceGroup().name)]"},
           "authenticationType": {"value": "password"},
           "adminPasswordOrKey": { 
             "reference": {
@@ -137,7 +139,7 @@
                             "secretName": "[variables('keyVault-settings').vm01.secretName]"
                         }
           },
-          "jobId": {"value": "[parameters('jobid')]"},
+          "CurrentDateTimeInTicks": {"value": "[parameters('CurrentDateTimeInTicks')]"},
           "scriptUri": {"value": "[concat(variables('templateBaseUrl'), 'Runbook.ps1', parameters('SASToken'))]"},
           "tenantid": {"value": "[parameters('tenantid')]"},
           "userName": {"value": "[parameters('appid')]"},
@@ -146,8 +148,7 @@
         }
       },
       "dependsOn": [
-        "VM02",
-        "VM01"
+        "VM02"
       ]
     }
   ],

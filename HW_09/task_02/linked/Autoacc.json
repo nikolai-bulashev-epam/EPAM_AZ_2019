@@ -27,11 +27,13 @@
                 "description": "The password for the Azure Automation credential."
             }
         },
-        "jobId": {
-            "type": "string",
-            "metadata": {
-                "description": "The GUID for the runbook job to be started."
-            }
+        "CurrentDateTimeInTicks": {
+          "type": "string",
+          "minLength": 18,
+          "maxLength": 18,
+          "metadata": {
+            "description": "the current datetime in ticks. this is used to generate a unique string for every deployment"
+          }
         },
         "scriptUri": {
             "type": "string"
@@ -51,7 +53,8 @@
         "runbookName": "Shutdown-ARM-VMs-Parallel",
         "scriptUri": "[parameters('scriptUri')]",
         "runbookDescription": "Authenticates to Azure and lists all the Azure V1 VMs",
-        "sku": "Free"
+        "sku": "Free",
+        "UniqueStringBasedOnTimeStamp": "[uniqueString(deployment().name, parameters('CurrentDateTimeInTicks'))]"
     },
     "resources": [
       {
@@ -122,7 +125,7 @@
             }
           },
           {
-            "name": "[parameters('jobId')]",
+            "name": "[guid('Shutdown-ARM-VMs-Parallel', variables('UniqueStringBasedOnTimeStamp'))]",
             "type": "jobs",
             "apiVersion": "2017-05-15-preview",
             "location": "[resourceGroup().location]",
@@ -192,14 +195,14 @@
                     "contentVersion": "1.0"
                 },
                 "parameters": {
-                    "NodeName": {
-                        "value": "[parameters('accountName')]"
+                    "accountName": {
+                      "value": "[parameters('accountName')]"
                     },
                     "location": {
                           "value": "[resourcegroup().location]"
                     },
                     "configurationName": {
-                        "value": "configurationName"
+                        "value": "IISWebsite"
                     },
                     "configurationDescription": {
                         "value": "DSC2Desc"
@@ -208,6 +211,35 @@
                         "value": "[concat(parameters('sauri'),'IISWebsite.ps1',parameters('token'))]",
                     }
                 }
+            }
+          },
+          {
+            "apiVersion": "2015-01-01",
+            "name": "nestedTemplateCompilationjob",
+            "type": "Microsoft.Resources/deployments",
+            "dependsOn": [
+                "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]"
+            ],
+            "properties": {
+              "mode": "incremental",
+              "templateLink": {
+                  "uri": "https://raw.githubusercontent.com/azureautomation/automation-packs/master/000-base-automation-resource-templates/deploy-compilationjob/deployCompilationjob.json",
+                  "contentVersion": "1.0"
+              },
+              "parameters": {
+                "accountName": {
+                    "value": "[parameters('accountName')]"
+                },
+                "location": {
+                      "value": "[resourcegroup().location]"
+                },
+                "configurationName": {
+                    "value": "IISWebsite"
+                },
+                "jobId":{
+                    "value": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]"
+                }
+              }
             }
           }
         ]
