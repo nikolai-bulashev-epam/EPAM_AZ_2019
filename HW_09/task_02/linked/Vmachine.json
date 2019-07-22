@@ -189,7 +189,66 @@
               "storageUri": "[reference(resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))).primaryEndpoints.blob]"
             }
           }
-        }
+        },
+        "resources": [
+          {
+            "type": "extensions",
+            "name": "OnboardToDSC]",
+            "apiVersion": "2017-12-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+              "[concat('Microsoft.Compute/virtualMachines/', variables('VMName'))]"
+            ],
+            "properties": {
+              "publisher": "Microsoft.Powershell",
+              "type": "DSC",
+              "typeHandlerVersion": "2.75",
+              "autoUpgradeMinorVersion": true,
+              "protectedSettings": {
+                "Items": {
+                  "registrationKeyPrivate": "[listKeys(resourceId('Microsoft.Automation/automationAccounts/', parameters('automationAccountName')), '2018-01-15').Keys[0].value]"
+                }
+              },
+              "settings": {
+                "Properties": [
+                  {
+                    "Name": "RegistrationKey",
+                    "Value": {
+                      "UserName": "PLACEHOLDER_DONOTUSE",
+                      "Password": "PrivateSettingsRef:registrationKeyPrivate"
+                    },
+                    "TypeName": "System.Management.Automation.PSCredential"
+                  },
+                  {
+                    "Name": "RegistrationUrl",
+                    "Value": "[reference(concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))).registrationUrl]",
+                    "TypeName": "System.String"
+                  },
+                  {
+                    "Name": "NodeConfigurationName",
+                    "Value": "[parameters('nodeConfigurationName')]",
+                    "TypeName": "System.String"
+                  },
+                  {
+                    "Name": "ConfigurationMode",
+                    "Value": "ApplyandAutoCorrect",
+                    "TypeName": "System.String"
+                  },
+                  {
+                    "Name": "RebootNodeIfNeeded",
+                    "Value": true,
+                    "TypeName": "System.Boolean"
+                  },
+                  {
+                    "Name": "ActionAfterReboot",
+                    "Value": "ContinueConfiguration",
+                    "TypeName": "System.String"
+                  }
+                ]
+              }
+            }
+          }
+        ]
       },
       {
         "type": "Microsoft.Compute/virtualMachines/extensions",

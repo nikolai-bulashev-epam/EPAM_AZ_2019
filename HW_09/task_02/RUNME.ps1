@@ -45,7 +45,6 @@ if ($notPresentBucket) {
     Get-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context
 }
 
-Install-Module -Name xPSDesiredStateConfiguration -Scope CurrentUser
 Publish-AzVMDscConfiguration ".\dsc\iis.ps1" -OutputArchivePath ".\DSC\iis.zip" -Force
 $token = New-AzStorageContainerSASToken -Name  $blobContainerName -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context 
 $tenantId = Get-AzSubscription | Select-Object tenantid
@@ -78,4 +77,4 @@ $parameters.Add('CurrentDateTimeInTicks',$UTCTimeTick)
 $parameters.Add('tenantid',$tenantId.TenantId)
 $parameters.Add('appid',$app.ApplicationId.Guid)
 
-New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -TemplateParameterObject $parameters -SAStoken $token
+New-AzResourceGroupDeployment -ResourceGroupName $RGName -TemplateFile 'Main.json' -TemplateParameterObject $parameters -SAStoken $token -Verbose

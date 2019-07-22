@@ -70,7 +70,7 @@
           }
         },
         "resources": [
-          {
+          { 
             "name": "IISWebsite",
             "type": "configurations",
             "apiVersion": "2015-10-31",
@@ -208,37 +208,58 @@
                         "value": "DSC2Desc"
                     },
                     "configurationURI": {
-                        "value": "[concat(parameters('sauri'),'IISWebsite.ps1',parameters('token'))]",
+                        "value": "[concat(parameters('sauri'),'IISWebsite.ps1',parameters('token'))]"
                     }
                 }
             }
           },
           {
-            "apiVersion": "2015-01-01",
-            "name": "nestedTemplateCompilationjob",
-            "type": "Microsoft.Resources/deployments",
+            "name": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]",
+            "type": "compilationjobs",
             "dependsOn": [
-                "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]"
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/modules/xNetworking')]",
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/modules/xWebAdministration')]"
             ],
+            "apiVersion": "2015-01-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
             "properties": {
-              "mode": "incremental",
-              "templateLink": {
-                  "uri": "https://raw.githubusercontent.com/azureautomation/automation-packs/master/000-base-automation-resource-templates/deploy-compilationjob/deployCompilationjob.json",
-                  "contentVersion": "1.0"
-              },
-              "parameters": {
-                "accountName": {
-                    "value": "[parameters('accountName')]"
+                "configuration": {
+                    "name": "IISWebsite"
                 },
-                "location": {
-                      "value": "[resourcegroup().location]"
-                },
-                "configurationName": {
-                    "value": "IISWebsite"
-                },
-                "jobId":{
-                    "value": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]"
+                "parameters": {
+                  "NodeName": "webserver01"
                 }
+            }
+          },
+          {
+            "name": "xNetworking",
+            "type": "modules",
+            "apiVersion": "2015-10-31",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]"
+            ],
+            "tags": {},
+            "properties": {
+              "contentLink": {
+                "uri": "https://devopsgallerystorage.blob.core.windows.net/packages/xnetworking.5.7.0.nupkg"
+              }
+            }
+          },
+          {
+            "name": "xWebAdministration",
+            "type": "modules",
+            "apiVersion": "2015-10-31",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]"
+            ],
+            "tags": {},
+            "properties": {
+              "contentLink": {
+                "uri": "https://devopsgallerystorage.blob.core.windows.net:443/packages/xwebadministration.2.6.0.nupkg"
               }
             }
           }

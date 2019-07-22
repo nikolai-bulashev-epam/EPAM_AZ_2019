@@ -5,9 +5,9 @@ Configuration IISWebsite
 	)
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Import-DscResource -ModuleName xNetworking -ModuleVersion "5.6.0.0"
-    Import-DscResource -ModuleName xWebAdministration -ModuleVersion "1.19.0.0"
-
+    Import-DscResource -ModuleName xNetworking 
+    Import-DscResource -ModuleName xWebAdministration 
+    
     Node $NodeName
     {
         xFirewall Firewall
