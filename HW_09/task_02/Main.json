@@ -90,7 +90,7 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
-      "name": "VM03",
+      "name": "VM01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -123,18 +123,17 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
-      "name": "VM02",
+      "name": "VM03",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('templateBaseUrl'), 'VmachineLin.json', parameters('SASToken'))]",
-          "contentVersion": "1.0.0.0"
+          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json', parameters('SASToken'))]",
+          "contentVersion": "1.0.0.1"
         },
         "parameters": {
           "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
-          "adminUsername" : {"value": "[concat('admin-', resourceGroup().name)]"},
-          "authenticationType": {"value": "password"},
-          "adminPasswordOrKey": { 
+          "adminUsername" : {"value": "[concat('admin-', resourceGroup().Name)]"},
+          "adminPassword": { 
             "reference": {
                             "keyVault": {
                                 "id": "[reference('kv').outputs.KVUri.value]"
@@ -142,14 +141,16 @@
                             "secretName": "[variables('keyVault-settings').vm01.secretName]"
                         }
           },
-          "dnsLabelPrefix": {"value": "lin02"},
-          "CustomScriptURL": {"value": "[concat(variables('templateBaseUrl'), 'apache2.sh', parameters('SASToken'))]"},
-          "commandToExecute": {"value": "/bin/sh apache2.sh"}
+          "dnsLabelPrefix": {"value": "win03"},
+          "accountName": {"value": "[concat(resourcegroup().name,'autoaccount')]"},
+          "CurrentDateTimeInTicks": {"value": "[parameters('CurrentDateTimeInTicks')]"},
+          "RegistrationUrl": {"value": "[reference('autoacc').Outputs.RegistrationUrl.value]"}
         }
       },
       "dependsOn": [
         "kv",
-        "vmnet"
+        "vmnet",
+        "autoacc"
       ]
     },
     {
