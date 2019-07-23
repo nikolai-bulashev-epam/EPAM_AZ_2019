@@ -90,6 +90,39 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2018-05-01",
+      "name": "VM03",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('templateBaseUrl'), 'Vmachine.json', parameters('SASToken'))]",
+          "contentVersion": "1.0.0.1"
+        },
+        "parameters": {
+          "VNetSettings" : { "value": "[reference('vmnet').outputs.VMNetOutput.value]" },
+          "adminUsername" : {"value": "[concat('admin-', resourceGroup().Name)]"},
+          "adminPassword": { 
+            "reference": {
+                            "keyVault": {
+                                "id": "[reference('kv').outputs.KVUri.value]"
+                            },
+                            "secretName": "[variables('keyVault-settings').vm01.secretName]"
+                        }
+          },
+          "dnsLabelPrefix": {"value": "win03"},
+          "accountName": {"value": "[concat(resourcegroup().name,'autoaccount')]"},
+          "CurrentDateTimeInTicks": {"value": "[parameters('CurrentDateTimeInTicks')]"},
+          "RegistrationUrl": {"value": "[reference('autoacc').Outputs.RegistrationUrl.value]"}
+        }
+      },
+      "dependsOn": [
+        "kv",
+        "vmnet",
+        "autoacc"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
       "name": "VM02",
       "properties": {
         "mode": "Incremental",
@@ -146,10 +179,7 @@
           "token": {"value": "[parameters('SASToken')]"},
           "sauri": {"value": "[variables('templateBaseUrl')]"}
         }
-      },
-      "dependsOn": [
-        "VM02"
-      ]
+      }
     }
   ],
   "outputs": {

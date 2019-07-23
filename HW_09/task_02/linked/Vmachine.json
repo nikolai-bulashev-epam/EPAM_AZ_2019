@@ -46,15 +46,23 @@
           "description": "Location for all resources."
         }
       },
-      "modulesUrl": {
+      "AccountName": {
         "type": "string"
       },
-      "IndexFileUrl": {
+      "RegistrationUrl": {
         "type": "string"
       },
-      "configurationFunction": {
+      "DSCNodeName": {
         "type": "string",
-        "defaultValue": ""
+        "defaultValue": "[concat(resourceGroup().Name,parameters('dnsLabelPrefix'))]"
+      },
+      "CurrentDateTimeInTicks": {
+        "type": "string",
+        "minLength": 18,
+        "maxLength": 18,
+        "metadata": {
+          "description": "the current datetime in ticks. this is used to generate a unique string for every deployment"
+        }
       }
     },
     "variables": {
@@ -65,9 +73,26 @@
       "vmName": "[concat(resourceGroup().Name,parameters('dnsLabelPrefix'))]",
       "virtualNetworkName": "[parameters('VNetSettings').vnetName]",
       "subnetRefsubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-      "vmExtensionName": "dscExtension"
+      "UniqueStringBasedOnTimeStamp": "[uniqueString(resourceGroup().name, parameters('CurrentDateTimeInTicks'))]",
+      "jobguid": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]"
     },
     "resources": [
+      {
+        "name": "[concat(parameters('accountName'), '/', variables('jobguid') )]",
+        "type": "Microsoft.Automation/automationAccounts/compilationjobs",
+
+        "apiVersion": "2015-01-01-preview",
+        "location": "[resourceGroup().location]",
+        "tags": {},
+        "properties": {
+            "configuration": {
+                "name": "IISWebsite"
+            },
+            "parameters": {
+              "NodeName": "[parameters('DSCNodeName')]"
+            }
+        }
+      },
       {
         "type": "Microsoft.Storage/storageAccounts",
         "apiVersion": "2018-11-01",
@@ -147,7 +172,7 @@
         "location": "[parameters('location')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
+          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
         ],
         "properties": {
           "hardwareProfile": {
@@ -191,9 +216,10 @@
           }
         },
         "resources": [
+          
           {
             "type": "extensions",
-            "name": "OnboardToDSC]",
+            "name": "OnboardToDSC",
             "apiVersion": "2017-12-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
@@ -206,7 +232,7 @@
               "autoUpgradeMinorVersion": true,
               "protectedSettings": {
                 "Items": {
-                  "registrationKeyPrivate": "[listKeys(resourceId('Microsoft.Automation/automationAccounts/', parameters('automationAccountName')), '2018-01-15').Keys[0].value]"
+                  "registrationKeyPrivate": "[listKeys(resourceId('Microsoft.Automation/automationAccounts/', parameters('AccountName')), '2018-01-15').Keys[0].value]"
                 }
               },
               "settings": {
@@ -221,12 +247,12 @@
                   },
                   {
                     "Name": "RegistrationUrl",
-                    "Value": "[reference(concat('Microsoft.Automation/automationAccounts/', parameters('automationAccountName'))).registrationUrl]",
+                    "Value": "[parameters('RegistrationUrl')]",
                     "TypeName": "System.String"
                   },
                   {
                     "Name": "NodeConfigurationName",
-                    "Value": "[parameters('nodeConfigurationName')]",
+                    "Value": "IISWebsite.webserver01",
                     "TypeName": "System.String"
                   },
                   {
@@ -249,30 +275,6 @@
             }
           }
         ]
-      },
-      {
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "name": "[concat(variables('vmName'),'/', variables('vmExtensionName'))]",
-        "apiVersion": "2015-05-01-preview",
-        "location": "[parameters('location')]",
-        "dependsOn": [
-          "[concat('Microsoft.Compute/virtualMachines/', variables('vmName'))]"
-        ],
-        "properties": {
-          "publisher": "Microsoft.Powershell",
-          "type": "DSC",
-          "typeHandlerVersion": "2.19",
-          "autoUpgradeMinorVersion": true,
-          "settings": {
-            "ModulesUrl": "[parameters('modulesUrl')]",
-            "ConfigurationFunction": "[parameters('configurationFunction')]",
-            "Properties": {
-              "MachineName": "[variables('vmName')]",
-              "indexFileUrl": "[parameters('IndexFileUrl')]"
-            }
-          },
-          "protectedSettings": null
-        }
       }
     ],
     "outputs": {

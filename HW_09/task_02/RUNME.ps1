@@ -45,7 +45,6 @@ if ($notPresentBucket) {
     Get-AzStoragecontainer -Name $blobContainerName -Context $storageAcct.Context
 }
 
-Publish-AzVMDscConfiguration ".\dsc\iis.ps1" -OutputArchivePath ".\DSC\iis.zip" -Force
 $token = New-AzStorageContainerSASToken -Name  $blobContainerName -Permission r -ExpiryTime (Get-Date).AddMinutes(30.0) -context $storageAcct.Context 
 $tenantId = Get-AzSubscription | Select-Object tenantid
 $UTCNow = (Get-Date).ToUniversalTime()

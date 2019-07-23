@@ -213,26 +213,7 @@
                 }
             }
           },
-          {
-            "name": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]",
-            "type": "compilationjobs",
-            "dependsOn": [
-              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'))]",
-              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/modules/xNetworking')]",
-              "[concat('Microsoft.Automation/automationAccounts/', parameters('accountName'), '/modules/xWebAdministration')]"
-            ],
-            "apiVersion": "2015-01-01-preview",
-            "location": "[resourceGroup().location]",
-            "tags": {},
-            "properties": {
-                "configuration": {
-                    "name": "IISWebsite"
-                },
-                "parameters": {
-                  "NodeName": "webserver01"
-                }
-            }
-          },
+          
           {
             "name": "xNetworking",
             "type": "modules",
@@ -266,5 +247,10 @@
         ]
       }
     ],
-    "outputs": {}
+    "outputs": {
+      "RegistrationUrl": {
+        "type": "string",
+        "value": "[reference(parameters('AccountName')).RegistrationUrl]"
+      }
+    }
 }
