@@ -110,7 +110,6 @@
           },
           "dnsLabelPrefix": {"value": "win03"},
           "accountName": {"value": "[concat(resourcegroup().name,'autoaccount')]"},
-          "CurrentDateTimeInTicks": {"value": "[parameters('CurrentDateTimeInTicks')]"},
           "RegistrationUrl": {"value": "[reference('autoacc').Outputs.RegistrationUrl.value]"}
         }
       },
@@ -143,7 +142,6 @@
           },
           "dnsLabelPrefix": {"value": "win03"},
           "accountName": {"value": "[concat(resourcegroup().name,'autoaccount')]"},
-          "CurrentDateTimeInTicks": {"value": "[parameters('CurrentDateTimeInTicks')]"},
           "RegistrationUrl": {"value": "[reference('autoacc').Outputs.RegistrationUrl.value]"}
         }
       },

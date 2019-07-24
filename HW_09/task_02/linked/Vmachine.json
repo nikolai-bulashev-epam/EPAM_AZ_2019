@@ -56,17 +56,13 @@
         "type": "string",
         "defaultValue": "[concat(resourceGroup().Name,parameters('dnsLabelPrefix'))]"
       },
-      "CurrentDateTimeInTicks": {
-        "type": "string",
-        "minLength": 18,
-        "maxLength": 18,
-        "metadata": {
-          "description": "the current datetime in ticks. this is used to generate a unique string for every deployment"
-        }
-      },
       "nodeRole": {
         "type": "string",
         "defaultValue": "IISWebsite"
+      },
+      "newGuid": {
+        "type": "string",
+        "defaultValue": "[newGuid()]"
       }
     },
     "variables": {
@@ -77,10 +73,10 @@
       "vmName": "[concat(resourceGroup().Name,parameters('dnsLabelPrefix'))]",
       "virtualNetworkName": "[parameters('VNetSettings').vnetName]",
       "subnetRefsubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-      "UniqueStringBasedOnTimeStamp": "[uniqueString(resourceGroup().name, parameters('CurrentDateTimeInTicks'))]",
-      "jobguid": "[guid('nestedTemplateCompilationjob', variables('UniqueStringBasedOnTimeStamp'))]"
+      "jobguid": "[parameters('newGuid')]"
     },
     "resources": [
+      
       {
         "name": "[concat(parameters('accountName'), '/', variables('jobguid') )]",
         "type": "Microsoft.Automation/automationAccounts/compilationjobs",
@@ -126,7 +122,7 @@
         "name": "[variables('nicName')]",
         "location": "[parameters('location')]",
         "dependsOn": [
-          "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+          "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
         ],
         "properties": {
           "ipConfigurations": [
@@ -176,7 +172,7 @@
         "location": "[parameters('location')]",
         "dependsOn": [
           "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
+          "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
         ],
         "properties": {
           "hardwareProfile": {
